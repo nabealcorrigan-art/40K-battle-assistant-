@@ -1132,6 +1132,18 @@ class StrategyWhiteboard {
         this.previewCanvas = null;
         this.previewCtx = null;
         
+        // Custom image overlay properties
+        this.customImage = null;
+        this.customImageElement = null;
+        this.customImageOpacity = 1.0;
+        this.customImageScale = { width: 100, height: 100 };
+        this.customImagePosition = { x: 0, y: 0 };
+        this.isImageLocked = false;
+        this.maintainAspectRatio = true;
+        this.originalAspectRatio = 1;
+        this.isDraggingImage = false;
+        this.dragStartPos = null;
+        
         this.init();
     }
 
@@ -1232,6 +1244,41 @@ class StrategyWhiteboard {
             const mouseEvent = new MouseEvent('mouseup', {});
             this.canvas.dispatchEvent(mouseEvent);
         });
+
+        // Custom image upload and controls
+        document.getElementById('custom-image-upload').addEventListener('change', (e) => {
+            this.handleCustomImageUpload(e);
+        });
+
+        document.getElementById('remove-custom-image').addEventListener('click', () => {
+            this.removeCustomImage();
+        });
+
+        document.getElementById('image-width-scale').addEventListener('input', (e) => {
+            this.updateImageScale('width', parseInt(e.target.value));
+        });
+
+        document.getElementById('image-height-scale').addEventListener('input', (e) => {
+            this.updateImageScale('height', parseInt(e.target.value));
+        });
+
+        document.getElementById('maintain-aspect-ratio').addEventListener('change', (e) => {
+            this.maintainAspectRatio = e.target.checked;
+        });
+
+        document.getElementById('custom-image-opacity').addEventListener('input', (e) => {
+            this.customImageOpacity = parseInt(e.target.value) / 100;
+            document.getElementById('custom-opacity-value').textContent = `${e.target.value}%`;
+            this.updateCustomImageDisplay();
+        });
+
+        document.getElementById('lock-image-position').addEventListener('change', (e) => {
+            this.isImageLocked = e.target.checked;
+            this.updateImageLockState();
+        });
+
+        // Custom image dragging events
+        this.setupCustomImageDragging();
     }
 
     selectTool(tool) {
@@ -1309,6 +1356,11 @@ class StrategyWhiteboard {
         // Redraw background if exists
         if (this.currentLayout !== 'none') {
             this.loadBackgroundLayout(this.currentLayout);
+        }
+        
+        // Update custom image display if exists
+        if (this.customImageElement) {
+            this.updateCustomImageDisplay();
         }
     }
 
@@ -1456,6 +1508,181 @@ class StrategyWhiteboard {
         ctx.stroke();
     }
 
+    // Custom Image Overlay Methods
+    async handleCustomImageUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        try {
+            const imageDataUrl = await this.readFileAsDataURL(file);
+            
+            // Create image element
+            this.customImage = new Image();
+            this.customImage.onload = () => {
+                this.originalAspectRatio = this.customImage.width / this.customImage.height;
+                this.createCustomImageOverlay();
+                this.showCustomImageControls();
+                this.updateCustomImageDisplay();
+            };
+            this.customImage.src = imageDataUrl;
+
+        } catch (error) {
+            console.error('Error uploading custom image:', error);
+            alert('Error uploading image. Please try again.');
+        }
+    }
+
+    readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    createCustomImageOverlay() {
+        const overlay = document.getElementById('custom-image-overlay');
+        overlay.innerHTML = '';
+        
+        this.customImageElement = document.createElement('img');
+        this.customImageElement.src = this.customImage.src;
+        this.customImageElement.alt = 'Custom overlay image';
+        
+        overlay.appendChild(this.customImageElement);
+        
+        // Reset position and scale
+        this.customImagePosition = { x: 0, y: 0 };
+        this.customImageScale = { width: 100, height: 100 };
+        this.updateImageScaleInputs();
+    }
+
+    updateImageScale(dimension, value) {
+        if (this.maintainAspectRatio) {
+            if (dimension === 'width') {
+                this.customImageScale.width = value;
+                this.customImageScale.height = Math.round(value / this.originalAspectRatio);
+            } else {
+                this.customImageScale.height = value;
+                this.customImageScale.width = Math.round(value * this.originalAspectRatio);
+            }
+            this.updateImageScaleInputs();
+        } else {
+            this.customImageScale[dimension] = value;
+        }
+        
+        this.updateCustomImageDisplay();
+        this.updateImageScaleValues();
+    }
+
+    updateImageScaleInputs() {
+        document.getElementById('image-width-scale').value = this.customImageScale.width;
+        document.getElementById('image-height-scale').value = this.customImageScale.height;
+        this.updateImageScaleValues();
+    }
+
+    updateImageScaleValues() {
+        document.getElementById('width-scale-value').textContent = `${this.customImageScale.width}%`;
+        document.getElementById('height-scale-value').textContent = `${this.customImageScale.height}%`;
+    }
+
+    updateCustomImageDisplay() {
+        if (!this.customImageElement) return;
+
+        const container = this.canvas.getBoundingClientRect();
+        const canvasScale = container.width / this.canvas.width;
+        
+        // Calculate scaled dimensions
+        const baseWidth = this.customImage.width * canvasScale;
+        const baseHeight = this.customImage.height * canvasScale;
+        
+        const scaledWidth = (baseWidth * this.customImageScale.width) / 100;
+        const scaledHeight = (baseHeight * this.customImageScale.height) / 100;
+        
+        // Apply styles
+        this.customImageElement.style.width = `${scaledWidth}px`;
+        this.customImageElement.style.height = `${scaledHeight}px`;
+        this.customImageElement.style.opacity = this.customImageOpacity;
+        
+        // Update position
+        const overlay = document.getElementById('custom-image-overlay');
+        overlay.style.transform = `translate(${-50 + this.customImagePosition.x}%, ${-50 + this.customImagePosition.y}%)`;
+    }
+
+    updateImageLockState() {
+        const overlay = document.getElementById('custom-image-overlay');
+        if (this.isImageLocked) {
+            overlay.classList.remove('unlocked');
+        } else {
+            overlay.classList.add('unlocked');
+        }
+    }
+
+    setupCustomImageDragging() {
+        const overlay = document.getElementById('custom-image-overlay');
+        
+        overlay.addEventListener('mousedown', (e) => {
+            if (this.isImageLocked) return;
+            
+            this.isDraggingImage = true;
+            this.dragStartPos = { x: e.clientX, y: e.clientY };
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isDraggingImage) return;
+            
+            const deltaX = (e.clientX - this.dragStartPos.x) / 4; // Adjust sensitivity
+            const deltaY = (e.clientY - this.dragStartPos.y) / 4;
+            
+            this.customImagePosition.x += deltaX;
+            this.customImagePosition.y += deltaY;
+            
+            this.dragStartPos = { x: e.clientX, y: e.clientY };
+            this.updateCustomImageDisplay();
+            
+            e.preventDefault();
+        });
+
+        document.addEventListener('mouseup', () => {
+            this.isDraggingImage = false;
+        });
+    }
+
+    showCustomImageControls() {
+        document.getElementById('custom-image-controls').style.display = 'block';
+        document.getElementById('remove-custom-image').style.display = 'inline-block';
+    }
+
+    hideCustomImageControls() {
+        document.getElementById('custom-image-controls').style.display = 'none';
+        document.getElementById('remove-custom-image').style.display = 'none';
+    }
+
+    removeCustomImage() {
+        if (confirm('Remove the custom image overlay?')) {
+            this.customImage = null;
+            this.customImageElement = null;
+            document.getElementById('custom-image-overlay').innerHTML = '';
+            document.getElementById('custom-image-upload').value = '';
+            this.hideCustomImageControls();
+            
+            // Reset controls
+            this.customImageScale = { width: 100, height: 100 };
+            this.customImagePosition = { x: 0, y: 0 };
+            this.customImageOpacity = 1.0;
+            this.isImageLocked = false;
+            
+            // Reset UI
+            document.getElementById('image-width-scale').value = 100;
+            document.getElementById('image-height-scale').value = 100;
+            document.getElementById('custom-image-opacity').value = 100;
+            document.getElementById('lock-image-position').checked = false;
+            this.updateImageScaleValues();
+            document.getElementById('custom-opacity-value').textContent = '100%';
+        }
+    }
+
     clearWhiteboard() {
         if (confirm('Are you sure you want to clear the strategy whiteboard? This action cannot be undone.')) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1478,6 +1705,23 @@ class StrategyWhiteboard {
             exportCtx.globalAlpha = this.overlayOpacity;
             exportCtx.drawImage(this.backgroundCanvas, 0, 0);
             exportCtx.globalAlpha = 1.0;
+        }
+        
+        // Draw custom image overlay if exists
+        if (this.customImage) {
+            exportCtx.save();
+            exportCtx.globalAlpha = this.customImageOpacity;
+            
+            const scaledWidth = (this.customImage.width * this.customImageScale.width) / 100;
+            const scaledHeight = (this.customImage.height * this.customImageScale.height) / 100;
+            
+            const centerX = this.canvas.width / 2;
+            const centerY = this.canvas.height / 2;
+            const imageX = centerX - scaledWidth / 2 + (this.customImagePosition.x * this.canvas.width) / 100;
+            const imageY = centerY - scaledHeight / 2 + (this.customImagePosition.y * this.canvas.height) / 100;
+            
+            exportCtx.drawImage(this.customImage, imageX, imageY, scaledWidth, scaledHeight);
+            exportCtx.restore();
         }
         
         // Draw main canvas content

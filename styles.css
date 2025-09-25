@@ -929,6 +929,130 @@ main {
     cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iNyIgeT0iNyIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjUpIiByeD0iMiIvPgo8L3N2Zz4K') 12 12, auto;
 }
 
+/* Custom Image Overlay Styles */
+.custom-image-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.custom-image-section h4 {
+    color: var(--secondary-color);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.custom-image-section h5 {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.image-upload-section {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.custom-image-controls {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.scaling-controls {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.scaling-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.image-controls .option-group {
+    margin-bottom: 0.5rem;
+}
+
+.option-group input[type="range"] {
+    background: var(--surface-color);
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    border: 1px solid var(--border-color);
+}
+
+.option-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+    border: 2px solid var(--surface-color);
+}
+
+.option-group input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    cursor: pointer;
+    border: 2px solid var(--surface-color);
+}
+
+.option-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+    accent-color: var(--secondary-color);
+}
+
+.option-group label {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.option-group span {
+    min-width: 50px;
+    text-align: right;
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+    margin-left: 0.5rem;
+}
+
+#custom-image-overlay {
+    position: absolute;
+    z-index: 1.5;
+    pointer-events: none;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#custom-image-overlay.unlocked {
+    pointer-events: all;
+    cursor: move;
+}
+
+#custom-image-overlay img {
+    display: block;
+    max-width: none;
+    height: auto;
+}
+
 /* Mobile responsiveness for strategy whiteboard */
 @media (max-width: 1024px) {
     .whiteboard-content {
