@@ -1092,6 +1092,7 @@ class TerrainPlanner {
 document.addEventListener('DOMContentLoaded', () => {
     const battleAssistant = new BattleAssistant();
     let terrainPlanner = null;
+    let strategyWhiteboard = null;
     
     // Terrain planner navigation
     document.getElementById('open-terrain-planner').addEventListener('click', () => {
@@ -1103,4 +1104,395 @@ document.addEventListener('DOMContentLoaded', () => {
             terrainPlanner = new TerrainPlanner();
         }
     });
+    
+    // Initialize strategy whiteboard
+    if (!strategyWhiteboard) {
+        strategyWhiteboard = new StrategyWhiteboard();
+    }
 });
+
+/**
+ * Strategy Whiteboard Class
+ * Handles the strategy whiteboard with PNG overlays and drawing tools
+ */
+class StrategyWhiteboard {
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.backgroundCanvas = null;
+        this.backgroundCtx = null;
+        this.isDrawing = false;
+        this.currentTool = 'pen';
+        this.penColor = '#FF0000';
+        this.penThickness = 2;
+        this.eraserSize = 15;
+        this.overlayOpacity = 0.5;
+        this.currentLayout = 'none';
+        this.startPoint = null;
+        this.previewCanvas = null;
+        this.previewCtx = null;
+        
+        this.init();
+    }
+
+    init() {
+        this.setupCanvas();
+        this.bindEvents();
+        this.updateCanvasSize();
+    }
+
+    setupCanvas() {
+        this.canvas = document.getElementById('strategy-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        
+        this.backgroundCanvas = document.getElementById('strategy-background-canvas');
+        this.backgroundCtx = this.backgroundCanvas.getContext('2d');
+        
+        // Create preview canvas for shape drawing
+        this.previewCanvas = document.createElement('canvas');
+        this.previewCtx = this.previewCanvas.getContext('2d');
+        
+        // Set canvas properties
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        // Set background canvas as background layer
+        this.backgroundCanvas.style.opacity = this.overlayOpacity;
+    }
+
+    bindEvents() {
+        // Tool selection
+        document.querySelectorAll('#strategy-whiteboard .tool-button').forEach(button => {
+            button.addEventListener('click', (e) => this.selectTool(e.target.dataset.tool));
+        });
+
+        // Drawing options
+        document.getElementById('whiteboard-pen-color').addEventListener('change', (e) => {
+            this.penColor = e.target.value;
+        });
+
+        document.getElementById('whiteboard-pen-thickness').addEventListener('input', (e) => {
+            this.penThickness = parseInt(e.target.value);
+            document.getElementById('whiteboard-thickness-value').textContent = `${this.penThickness}px`;
+        });
+
+        // Overlay selection
+        document.querySelectorAll('.layout-thumbnail').forEach(thumbnail => {
+            thumbnail.addEventListener('click', (e) => {
+                const layout = e.currentTarget.dataset.layout;
+                this.selectLayout(layout);
+            });
+        });
+
+        // Overlay opacity
+        document.getElementById('whiteboard-overlay-opacity').addEventListener('input', (e) => {
+            this.overlayOpacity = parseInt(e.target.value) / 100;
+            document.getElementById('whiteboard-opacity-value').textContent = `${e.target.value}%`;
+            this.backgroundCanvas.style.opacity = this.overlayOpacity;
+        });
+
+        // Whiteboard actions
+        document.getElementById('clear-whiteboard').addEventListener('click', () => {
+            this.clearWhiteboard();
+        });
+
+        document.getElementById('export-whiteboard').addEventListener('click', () => {
+            this.exportWhiteboard();
+        });
+
+        // Canvas mouse events
+        this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+        this.canvas.addEventListener('mouseup', (e) => this.stopDrawing(e));
+        this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+
+        // Canvas touch events for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mouseup', {});
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+    }
+
+    selectTool(tool) {
+        this.currentTool = tool;
+        
+        // Update UI
+        document.querySelectorAll('#strategy-whiteboard .tool-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`#strategy-whiteboard [data-tool="${tool}"]`).classList.add('active');
+        
+        // Update cursor
+        this.canvas.className = '';
+        this.canvas.classList.add(`${tool}-mode`);
+    }
+
+    selectLayout(layout) {
+        this.currentLayout = layout;
+        
+        // Update UI
+        document.querySelectorAll('.layout-thumbnail').forEach(thumb => thumb.classList.remove('selected'));
+        document.querySelector(`[data-layout="${layout}"]`).classList.add('selected');
+        
+        // Load background image
+        if (layout === 'none') {
+            this.clearBackground();
+        } else {
+            this.loadBackgroundLayout(layout);
+        }
+    }
+
+    loadBackgroundLayout(imagePath) {
+        const img = new Image();
+        img.onload = () => {
+            this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+            this.backgroundCtx.drawImage(img, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+        };
+        img.onerror = () => {
+            console.error('Could not load layout image:', imagePath);
+            alert('Could not load the selected layout. Please try another one.');
+        };
+        img.src = imagePath;
+    }
+
+    clearBackground() {
+        this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+    }
+
+    updateCanvasSize() {
+        const container = document.querySelector('.whiteboard-canvas-container');
+        const containerRect = container.getBoundingClientRect();
+        
+        // Set standard canvas size (can be made configurable later)
+        const canvasWidth = 800;
+        const canvasHeight = 600;
+        
+        // Scale canvas to fit container while maintaining aspect ratio
+        const scaleX = (containerRect.width - 40) / canvasWidth;
+        const scaleY = (containerRect.height - 40) / canvasHeight;
+        const scale = Math.min(scaleX, scaleY, 1);
+        
+        const scaledWidth = canvasWidth * scale;
+        const scaledHeight = canvasHeight * scale;
+        
+        // Update both canvases
+        [this.canvas, this.backgroundCanvas].forEach(canvas => {
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            canvas.style.width = `${scaledWidth}px`;
+            canvas.style.height = `${scaledHeight}px`;
+        });
+        
+        // Update preview canvas
+        this.previewCanvas.width = canvasWidth;
+        this.previewCanvas.height = canvasHeight;
+        
+        // Redraw background if exists
+        if (this.currentLayout !== 'none') {
+            this.loadBackgroundLayout(this.currentLayout);
+        }
+    }
+
+    getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        
+        return { x, y };
+    }
+
+    startDrawing(e) {
+        this.isDrawing = true;
+        const pos = this.getMousePos(e);
+        
+        if (['line', 'arrow', 'rectangle', 'circle'].includes(this.currentTool)) {
+            this.startPoint = pos;
+            return;
+        }
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(pos.x, pos.y);
+    }
+
+    draw(e) {
+        if (!this.isDrawing) return;
+        
+        const pos = this.getMousePos(e);
+        
+        if (this.currentTool === 'pen') {
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.strokeStyle = this.penColor;
+            this.ctx.lineWidth = this.penThickness;
+            this.ctx.lineTo(pos.x, pos.y);
+            this.ctx.stroke();
+        } else if (this.currentTool === 'eraser') {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.beginPath();
+            this.ctx.arc(pos.x, pos.y, this.eraserSize / 2, 0, 2 * Math.PI);
+            this.ctx.fill();
+        } else if (['line', 'arrow', 'rectangle', 'circle'].includes(this.currentTool) && this.startPoint) {
+            // Preview shapes while drawing
+            this.drawShapePreview(this.startPoint, pos);
+        }
+    }
+
+    drawShapePreview(start, end) {
+        // Clear previous preview by redrawing the canvas
+        this.previewCtx.clearRect(0, 0, this.previewCanvas.width, this.previewCanvas.height);
+        this.previewCtx.drawImage(this.canvas, 0, 0);
+        
+        // Draw preview shape
+        this.previewCtx.strokeStyle = this.penColor;
+        this.previewCtx.lineWidth = this.penThickness;
+        this.previewCtx.globalCompositeOperation = 'source-over';
+        
+        if (this.currentTool === 'line') {
+            this.previewCtx.beginPath();
+            this.previewCtx.moveTo(start.x, start.y);
+            this.previewCtx.lineTo(end.x, end.y);
+            this.previewCtx.stroke();
+        } else if (this.currentTool === 'arrow') {
+            this.drawArrow(this.previewCtx, start.x, start.y, end.x, end.y);
+        } else if (this.currentTool === 'rectangle') {
+            this.previewCtx.beginPath();
+            this.previewCtx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
+            this.previewCtx.stroke();
+        } else if (this.currentTool === 'circle') {
+            const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+            this.previewCtx.beginPath();
+            this.previewCtx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+            this.previewCtx.stroke();
+        }
+        
+        // Show preview
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.canvas.width;
+        tempCanvas.height = this.canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(this.previewCanvas, 0, 0);
+        
+        // Replace canvas content temporarily
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.drawImage(tempCanvas, 0, 0);
+    }
+
+    stopDrawing(e) {
+        if (!this.isDrawing) return;
+        
+        this.isDrawing = false;
+        
+        if (['line', 'arrow', 'rectangle', 'circle'].includes(this.currentTool) && this.startPoint && e) {
+            const pos = this.getMousePos(e);
+            this.drawFinalShape(this.startPoint, pos);
+            this.startPoint = null;
+        }
+        
+        this.ctx.beginPath();
+    }
+
+    drawFinalShape(start, end) {
+        // Clear the preview and draw the final shape
+        this.ctx.strokeStyle = this.penColor;
+        this.ctx.lineWidth = this.penThickness;
+        this.ctx.globalCompositeOperation = 'source-over';
+        
+        if (this.currentTool === 'line') {
+            this.ctx.beginPath();
+            this.ctx.moveTo(start.x, start.y);
+            this.ctx.lineTo(end.x, end.y);
+            this.ctx.stroke();
+        } else if (this.currentTool === 'arrow') {
+            this.drawArrow(this.ctx, start.x, start.y, end.x, end.y);
+        } else if (this.currentTool === 'rectangle') {
+            this.ctx.beginPath();
+            this.ctx.rect(start.x, start.y, end.x - start.x, end.y - start.y);
+            this.ctx.stroke();
+        } else if (this.currentTool === 'circle') {
+            const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+            this.ctx.beginPath();
+            this.ctx.arc(start.x, start.y, radius, 0, 2 * Math.PI);
+            this.ctx.stroke();
+        }
+    }
+
+    drawArrow(ctx, fromX, fromY, toX, toY) {
+        const headLength = 15; // Length of the arrow head
+        const angle = Math.atan2(toY - fromY, toX - fromX);
+        
+        // Draw the line
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toX, toY);
+        ctx.stroke();
+        
+        // Draw the arrow head
+        ctx.beginPath();
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(toX - headLength * Math.cos(angle - Math.PI/6), toY - headLength * Math.sin(angle - Math.PI/6));
+        ctx.moveTo(toX, toY);
+        ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI/6), toY - headLength * Math.sin(angle + Math.PI/6));
+        ctx.stroke();
+    }
+
+    clearWhiteboard() {
+        if (confirm('Are you sure you want to clear the strategy whiteboard? This action cannot be undone.')) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    }
+
+    exportWhiteboard() {
+        // Create a temporary canvas to combine all layers
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = this.canvas.width;
+        exportCanvas.height = this.canvas.height;
+        const exportCtx = exportCanvas.getContext('2d');
+        
+        // White background
+        exportCtx.fillStyle = '#ffffff';
+        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        
+        // Draw background image if exists
+        if (this.currentLayout !== 'none') {
+            exportCtx.globalAlpha = this.overlayOpacity;
+            exportCtx.drawImage(this.backgroundCanvas, 0, 0);
+            exportCtx.globalAlpha = 1.0;
+        }
+        
+        // Draw main canvas content
+        exportCtx.drawImage(this.canvas, 0, 0);
+        
+        // Download the image
+        exportCanvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `strategy-plan-${new Date().toISOString().slice(0, 10)}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+}
