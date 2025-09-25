@@ -136,8 +136,37 @@
 
                     <div class="layout-overlay">
                         <h4>Background Layout</h4>
-                        <input type="file" id="layout-import" accept="image/*" class="file-input">
-                        <label for="layout-import" class="file-label">Load Layout</label>
+                        
+                        <!-- Official Layout Presets -->
+                        <div class="official-layouts">
+                            <h5>Official Reference Layouts:</h5>
+                            <div class="layout-thumbnails">
+                                <div class="layout-thumbnail" data-layout="layout1">
+                                    <img src="assets/terrain-layouts/layout1-thumb.svg" alt="Layout 1 - Central Hub">
+                                    <span>Layout 1</span>
+                                </div>
+                                <div class="layout-thumbnail" data-layout="layout2">
+                                    <img src="assets/terrain-layouts/layout2-thumb.svg" alt="Layout 2 - Linear Defense">
+                                    <span>Layout 2</span>
+                                </div>
+                                <div class="layout-thumbnail" data-layout="layout3">
+                                    <img src="assets/terrain-layouts/layout3-thumb.svg" alt="Layout 3 - Scattered Urban">
+                                    <span>Layout 3</span>
+                                </div>
+                                <div class="layout-thumbnail" data-layout="layout4">
+                                    <img src="assets/terrain-layouts/layout4-thumb.svg" alt="Layout 4 - Natural Environment">
+                                    <span>Layout 4</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Custom Layout Upload -->
+                        <div class="custom-layout">
+                            <h5>Custom Layout:</h5>
+                            <input type="file" id="layout-import" accept="image/*" class="file-input">
+                            <label for="layout-import" class="file-label">Load Custom Layout</label>
+                        </div>
+                        
                         <div class="option-group">
                             <label for="overlay-opacity">Opacity:</label>
                             <input type="range" id="overlay-opacity" min="0" max="100" value="30">

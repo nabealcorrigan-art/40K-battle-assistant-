@@ -1,0 +1,25 @@
+<svg width="120" height="90" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 4 Thumbnail: Natural Environment -->
+  <rect width="120" height="90" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+  
+  <!-- Central forest -->
+  <circle cx="60" cy="45" r="15" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  
+  <!-- Hills -->
+  <circle cx="22" cy="22" r="9" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  <circle cx="98" cy="18" r="8" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  <circle cx="15" cy="68" r="10" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  <circle cx="98" cy="72" r="8" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  
+  <!-- Small forests -->
+  <circle cx="38" cy="12" r="6" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  <circle cx="83" cy="45" r="5" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  <circle cx="45" cy="78" r="6" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  
+  <!-- Craters -->
+  <ellipse cx="75" cy="22" rx="4" ry="2" fill="#4A4A4A" stroke="#2A2A2A" stroke-width="1"/>
+  <ellipse cx="52" cy="68" rx="3" ry="2" fill="#4A4A4A" stroke="#2A2A2A" stroke-width="1"/>
+  
+  <!-- Small ruins -->
+  <rect x="90" y="38" width="8" height="8" fill="#8B4513" stroke="#654321" stroke-width="1" rx="1"/>
+</svg>

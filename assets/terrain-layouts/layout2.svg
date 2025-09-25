@@ -1,0 +1,38 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 2: Linear Defense Line -->
+  <rect width="800" height="600" fill="#2a2a2a" stroke="#444" stroke-width="2"/>
+  
+  <!-- Defensive line across the middle -->
+  <rect x="50" y="250" width="100" height="100" fill="#8B4513" stroke="#654321" stroke-width="2" rx="8"/>
+  <text x="100" y="305" fill="#DDD" text-anchor="middle" font-family="Arial" font-size="12">Ruins</text>
+  
+  <rect x="200" y="270" width="80" height="60" fill="#A0522D" stroke="#8B4513" stroke-width="2" rx="5"/>
+  <text x="240" y="305" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="11">Crates</text>
+  
+  <circle cx="350" cy="300" r="45" fill="#228B22" stroke="#006400" stroke-width="2"/>
+  <text x="350" y="305" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="11">Forest</text>
+  
+  <rect x="420" y="270" width="80" height="60" fill="#A0522D" stroke="#8B4513" stroke-width="2" rx="5"/>
+  <text x="460" y="305" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="11">Crates</text>
+  
+  <rect x="520" y="250" width="100" height="100" fill="#708090" stroke="#2F4F4F" stroke-width="2" rx="8"/>
+  <text x="570" y="305" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="12">Building</text>
+  
+  <rect x="650" y="270" width="100" height="60" fill="#8B4513" stroke="#654321" stroke-width="2" rx="8"/>
+  <text x="700" y="305" fill="#DDD" text-anchor="middle" font-family="Arial" font-size="11">Ruins</text>
+  
+  <!-- Flanking positions -->
+  <circle cx="150" cy="100" r="35" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="150" y="105" fill="#000" text-anchor="middle" font-family="Arial" font-size="10">Hill</text>
+  
+  <circle cx="650" cy="500" r="35" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="650" y="505" fill="#000" text-anchor="middle" font-family="Arial" font-size="10">Hill</text>
+  
+  <!-- Grid overlay -->
+  <defs>
+    <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#333" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#grid2)"/>
+</svg>

@@ -1,0 +1,50 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 4: Natural Environment -->
+  <rect width="800" height="600" fill="#2a2a2a" stroke="#444" stroke-width="2"/>
+  
+  <!-- Large central forest -->
+  <circle cx="400" cy="300" r="120" fill="#228B22" stroke="#006400" stroke-width="3"/>
+  <text x="400" y="308" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="16">Central Forest</text>
+  
+  <!-- Hills scattered around -->
+  <circle cx="150" cy="150" r="70" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="150" y="155" fill="#000" text-anchor="middle" font-family="Arial" font-size="12">Hill</text>
+  
+  <circle cx="650" cy="120" r="60" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="650" y="125" fill="#000" text-anchor="middle" font-family="Arial" font-size="12">Hill</text>
+  
+  <circle cx="100" cy="450" r="80" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="100" y="455" fill="#000" text-anchor="middle" font-family="Arial" font-size="12">Large Hill</text>
+  
+  <circle cx="650" cy="480" r="65" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="650" y="485" fill="#000" text-anchor="middle" font-family="Arial" font-size="12">Hill</text>
+  
+  <!-- Small forests -->
+  <circle cx="250" cy="80" r="45" fill="#228B22" stroke="#006400" stroke-width="2"/>
+  <text x="250" y="85" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="10">Forest</text>
+  
+  <circle cx="550" cy="300" r="40" fill="#228B22" stroke="#006400" stroke-width="2"/>
+  <text x="550" y="305" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="10">Forest</text>
+  
+  <circle cx="300" cy="520" r="50" fill="#228B22" stroke="#006400" stroke-width="2"/>
+  <text x="300" y="525" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="10">Forest</text>
+  
+  <!-- Craters -->
+  <ellipse cx="500" cy="150" rx="30" ry="20" fill="#4A4A4A" stroke="#2A2A2A" stroke-width="2"/>
+  <text x="500" y="155" fill="#CCC" text-anchor="middle" font-family="Arial" font-size="9">Crater</text>
+  
+  <ellipse cx="350" cy="450" rx="25" ry="15" fill="#4A4A4A" stroke="#2A2A2A" stroke-width="2"/>
+  <text x="350" y="455" fill="#CCC" text-anchor="middle" font-family="Arial" font-size="8">Crater</text>
+  
+  <!-- Small ruins -->
+  <rect x="600" y="250" width="60" height="60" fill="#8B4513" stroke="#654321" stroke-width="2" rx="5"/>
+  <text x="630" y="285" fill="#DDD" text-anchor="middle" font-family="Arial" font-size="10">Ruins</text>
+  
+  <!-- Grid overlay -->
+  <defs>
+    <pattern id="grid4" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#333" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#grid4)"/>
+</svg>
