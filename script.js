@@ -1347,6 +1347,11 @@ class StrategyWhiteboard {
             canvas.height = canvasHeight;
             canvas.style.width = `${scaledWidth}px`;
             canvas.style.height = `${scaledHeight}px`;
+            // Ensure canvases remain centered in container
+            canvas.style.position = 'absolute';
+            canvas.style.top = '50%';
+            canvas.style.left = '50%';
+            canvas.style.transform = 'translate(-50%, -50%)';
         });
         
         // Update preview canvas
