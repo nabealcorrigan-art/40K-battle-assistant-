@@ -1,0 +1,29 @@
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 1: Central Hub with Corner Positions -->
+  <rect width="800" height="600" fill="#2a2a2a" stroke="#444" stroke-width="2"/>
+  
+  <!-- Central large terrain piece -->
+  <rect x="300" y="200" width="200" height="200" fill="#8B4513" stroke="#654321" stroke-width="2" rx="10"/>
+  <text x="400" y="305" fill="#DDD" text-anchor="middle" font-family="Arial" font-size="14">Central Ruins</text>
+  
+  <!-- Corner terrain pieces -->
+  <circle cx="100" cy="100" r="60" fill="#228B22" stroke="#006400" stroke-width="2"/>
+  <text x="100" y="105" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="12">Forest</text>
+  
+  <rect x="620" y="40" width="120" height="120" fill="#708090" stroke="#2F4F4F" stroke-width="2" rx="5"/>
+  <text x="680" y="105" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="12">Building</text>
+  
+  <circle cx="100" cy="500" r="50" fill="#B8860B" stroke="#DAA520" stroke-width="2"/>
+  <text x="100" y="505" fill="#000" text-anchor="middle" font-family="Arial" font-size="12">Hill</text>
+  
+  <rect x="620" y="440" width="120" height="120" fill="#A0522D" stroke="#8B4513" stroke-width="2" rx="8"/>
+  <text x="680" y="505" fill="#FFF" text-anchor="middle" font-family="Arial" font-size="12">Crates</text>
+  
+  <!-- Grid overlay -->
+  <defs>
+    <pattern id="grid1" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#333" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#grid1)"/>
+</svg>

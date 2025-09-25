@@ -738,6 +738,14 @@ class TerrainPlanner {
             this.handleLayoutImport(e);
         });
 
+        // Official layout thumbnails
+        document.querySelectorAll('.layout-thumbnail').forEach(thumbnail => {
+            thumbnail.addEventListener('click', (e) => {
+                const layoutId = e.currentTarget.dataset.layout;
+                this.selectOfficialLayout(layoutId);
+            });
+        });
+
         document.getElementById('overlay-opacity').addEventListener('input', (e) => {
             this.overlayOpacity = parseInt(e.target.value) / 100;
             document.getElementById('opacity-value').textContent = `${e.target.value}%`;
@@ -1006,12 +1014,37 @@ class TerrainPlanner {
             this.backgroundImage = new Image();
             this.backgroundImage.onload = () => {
                 this.drawBackgroundImage();
+                this.clearLayoutThumbnailSelection();
             };
             this.backgroundImage.src = imageDataUrl;
         } catch (error) {
             console.error('Error loading background image:', error);
             alert('Error loading background image. Please try again.');
         }
+    }
+
+    selectOfficialLayout(layoutId) {
+        // Clear custom file input
+        document.getElementById('layout-import').value = '';
+        
+        // Update thumbnail selection
+        document.querySelectorAll('.layout-thumbnail').forEach(thumb => {
+            thumb.classList.remove('selected');
+        });
+        document.querySelector(`[data-layout="${layoutId}"]`).classList.add('selected');
+        
+        // Load the official layout image
+        this.backgroundImage = new Image();
+        this.backgroundImage.onload = () => {
+            this.drawBackgroundImage();
+        };
+        this.backgroundImage.src = `assets/terrain-layouts/${layoutId}.svg`;
+    }
+
+    clearLayoutThumbnailSelection() {
+        document.querySelectorAll('.layout-thumbnail').forEach(thumb => {
+            thumb.classList.remove('selected');
+        });
     }
 
     drawBackgroundImage() {
@@ -1030,6 +1063,7 @@ class TerrainPlanner {
         this.backgroundImage = null;
         this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
         document.getElementById('layout-import').value = '';
+        this.clearLayoutThumbnailSelection();
     }
 
     clearCanvas() {

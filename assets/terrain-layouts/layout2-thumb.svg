@@ -1,0 +1,16 @@
+<svg width="120" height="90" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 2 Thumbnail: Linear Defense -->
+  <rect width="120" height="90" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+  
+  <!-- Defense line -->
+  <rect x="8" y="38" width="12" height="12" fill="#8B4513" stroke="#654321" stroke-width="1" rx="1"/>
+  <rect x="25" y="40" width="10" height="8" fill="#A0522D" stroke="#8B4513" stroke-width="1" rx="1"/>
+  <circle cx="45" cy="45" r="6" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  <rect x="58" y="40" width="10" height="8" fill="#A0522D" stroke="#8B4513" stroke-width="1" rx="1"/>
+  <rect x="75" y="38" width="12" height="12" fill="#708090" stroke="#2F4F4F" stroke-width="1" rx="1"/>
+  <rect x="95" y="40" width="12" height="8" fill="#8B4513" stroke="#654321" stroke-width="1" rx="1"/>
+  
+  <!-- Flanking hills -->
+  <circle cx="22" cy="15" r="5" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  <circle cx="98" cy="75" r="5" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+</svg>

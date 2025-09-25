@@ -1,0 +1,13 @@
+<svg width="120" height="90" xmlns="http://www.w3.org/2000/svg">
+  <!-- Layout 1 Thumbnail: Central Hub -->
+  <rect width="120" height="90" fill="#2a2a2a" stroke="#444" stroke-width="1"/>
+  
+  <!-- Central terrain -->
+  <rect x="45" y="30" width="30" height="30" fill="#8B4513" stroke="#654321" stroke-width="1" rx="2"/>
+  
+  <!-- Corner pieces -->
+  <circle cx="15" cy="15" r="8" fill="#228B22" stroke="#006400" stroke-width="1"/>
+  <rect x="88" y="7" width="16" height="16" fill="#708090" stroke="#2F4F4F" stroke-width="1" rx="1"/>
+  <circle cx="15" cy="75" r="7" fill="#B8860B" stroke="#DAA520" stroke-width="1"/>
+  <rect x="88" y="67" width="16" height="16" fill="#A0522D" stroke="#8B4513" stroke-width="1" rx="1"/>
+</svg>
