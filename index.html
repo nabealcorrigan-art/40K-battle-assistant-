@@ -395,12 +395,58 @@
                         <span id="whiteboard-opacity-value">50%</span>
                     </div>
                 </div>
+
+                <div class="custom-image-section">
+                    <h4>Custom Image Overlay</h4>
+                    <div class="image-upload-section">
+                        <input type="file" id="custom-image-upload" accept="image/*" class="file-input">
+                        <label for="custom-image-upload" class="file-label">Upload Image</label>
+                        <button id="remove-custom-image" class="secondary-button" style="display: none;">Remove Image</button>
+                    </div>
+                    
+                    <div id="custom-image-controls" class="custom-image-controls" style="display: none;">
+                        <div class="scaling-controls">
+                            <h5>Scaling Controls</h5>
+                            <div class="scaling-row">
+                                <div class="option-group">
+                                    <label for="image-width-scale">Width (%):</label>
+                                    <input type="range" id="image-width-scale" min="10" max="300" value="100">
+                                    <span id="width-scale-value">100%</span>
+                                </div>
+                                <div class="option-group">
+                                    <label for="image-height-scale">Height (%):</label>
+                                    <input type="range" id="image-height-scale" min="10" max="300" value="100">
+                                    <span id="height-scale-value">100%</span>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <label>
+                                    <input type="checkbox" id="maintain-aspect-ratio" checked> Lock Aspect Ratio
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="image-controls">
+                            <div class="option-group">
+                                <label for="custom-image-opacity">Image Opacity:</label>
+                                <input type="range" id="custom-image-opacity" min="0" max="100" value="100">
+                                <span id="custom-opacity-value">100%</span>
+                            </div>
+                            <div class="option-group">
+                                <label>
+                                    <input type="checkbox" id="lock-image-position"> Lock Position
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Canvas container -->
             <div class="whiteboard-canvas-container">
                 <canvas id="strategy-canvas" width="800" height="600"></canvas>
                 <canvas id="strategy-background-canvas" width="800" height="600"></canvas>
+                <div id="custom-image-overlay" class="custom-image-overlay"></div>
                 <div class="canvas-overlay" id="strategy-canvas-overlay"></div>
             </div>
         </div>
