@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>40K Battle Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>40K Battle Assistant</h1>
+        <p>Record your battles, track your stratagems, and never miss a tactical opportunity</p>
+    </header>
+
+    <main>
+        <!-- Setup Section -->
+        <section id="setup-section" class="section active">
+            <h2>Battle Setup</h2>
+            
+            <div class="import-container">
+                <div class="import-section">
+                    <h3>Import Army List</h3>
+                    <input type="file" id="army-import" accept=".html" class="file-input">
+                    <label for="army-import" class="file-label">Choose HTML File</label>
+                    <div id="army-preview" class="preview-area"></div>
+                </div>
+                
+                <div class="import-section">
+                    <h3>Import Stratagems</h3>
+                    <input type="file" id="stratagem-import" accept=".html" class="file-input">
+                    <label for="stratagem-import" class="file-label">Choose HTML File</label>
+                    <div id="stratagem-preview" class="preview-area"></div>
+                </div>
+            </div>
+
+            <button id="start-battle" class="primary-button" disabled>Start Battle</button>
+        </section>
+
+        <!-- Battle Section -->
+        <section id="battle-section" class="section">
+            <div class="battle-header">
+                <h2>Battle in Progress</h2>
+                <div class="turn-counter">
+                    <span>Turn: </span>
+                    <span id="current-turn">1</span>
+                    <button id="next-turn" class="secondary-button">Next Turn</button>
+                </div>
+            </div>
+
+            <div class="battle-content">
+                <!-- Phase Navigation -->
+                <nav class="phase-nav">
+                    <button class="phase-button active" data-phase="command">Command</button>
+                    <button class="phase-button" data-phase="movement">Movement</button>
+                    <button class="phase-button" data-phase="shooting">Shooting</button>
+                    <button class="phase-button" data-phase="charge">Charge</button>
+                    <button class="phase-button" data-phase="fight">Fight</button>
+                    <button class="phase-button" data-phase="morale">Morale</button>
+                </nav>
+
+                <!-- Phase Content -->
+                <div class="phase-content">
+                    <div class="phase-panel active" data-phase="command">
+                        <h3>Command Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="command-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="command-notes" placeholder="Enter your command phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="command-image" accept="image/*" class="file-input">
+                                <label for="command-image" class="file-label">Add Photo</label>
+                                <div id="command-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-panel" data-phase="movement">
+                        <h3>Movement Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="movement-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="movement-notes" placeholder="Enter your movement phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="movement-image" accept="image/*" class="file-input">
+                                <label for="movement-image" class="file-label">Add Photo</label>
+                                <div id="movement-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-panel" data-phase="shooting">
+                        <h3>Shooting Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="shooting-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="shooting-notes" placeholder="Enter your shooting phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="shooting-image" accept="image/*" class="file-input">
+                                <label for="shooting-image" class="file-label">Add Photo</label>
+                                <div id="shooting-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-panel" data-phase="charge">
+                        <h3>Charge Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="charge-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="charge-notes" placeholder="Enter your charge phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="charge-image" accept="image/*" class="file-input">
+                                <label for="charge-image" class="file-label">Add Photo</label>
+                                <div id="charge-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-panel" data-phase="fight">
+                        <h3>Fight Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="fight-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="fight-notes" placeholder="Enter your fight phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="fight-image" accept="image/*" class="file-input">
+                                <label for="fight-image" class="file-label">Add Photo</label>
+                                <div id="fight-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-panel" data-phase="morale">
+                        <h3>Morale Phase</h3>
+                        <div class="stratagems-reminder">
+                            <h4>Relevant Stratagems</h4>
+                            <div id="morale-stratagems" class="stratagem-list"></div>
+                        </div>
+                        <div class="notes-section">
+                            <textarea id="morale-notes" placeholder="Enter your morale phase notes..."></textarea>
+                            <div class="image-upload">
+                                <input type="file" id="morale-image" accept="image/*" class="file-input">
+                                <label for="morale-image" class="file-label">Add Photo</label>
+                                <div id="morale-image-preview" class="image-preview"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Battle History -->
+            <div class="battle-history">
+                <h3>Battle History</h3>
+                <div id="history-log" class="history-log"></div>
+            </div>
+        </section>
+
+        <!-- Army and Stratagems Reference -->
+        <aside id="reference-panel" class="reference-panel">
+            <div class="reference-toggle">
+                <button id="toggle-reference">📋 Reference</button>
+            </div>
+            <div class="reference-content">
+                <div class="army-reference">
+                    <h4>Army List</h4>
+                    <div id="army-display"></div>
+                </div>
+                <div class="stratagems-reference">
+                    <h4>All Stratagems</h4>
+                    <div id="stratagems-display"></div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
