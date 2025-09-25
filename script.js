@@ -641,7 +641,466 @@ class BattleAssistant {
     }
 }
 
+/**
+ * Terrain Planner Class
+ * Handles the interactive whiteboard for terrain planning
+ */
+class TerrainPlanner {
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.backgroundCanvas = null;
+        this.backgroundCtx = null;
+        this.isDrawing = false;
+        this.currentTool = 'pen';
+        this.penColor = '#DAA520';
+        this.penThickness = 3;
+        this.eraserSize = 15;
+        this.showGrid = false;
+        this.snapToGrid = false;
+        this.gridSize = 20;
+        this.backgroundImage = null;
+        this.overlayOpacity = 0.3;
+        this.terrainPieces = [];
+        this.selectedTerrain = null;
+        this.draggedTerrain = null;
+        this.boardSizes = {
+            '44x30': { width: 660, height: 450 },
+            '48x48': { width: 720, height: 720 },
+            '60x44': { width: 900, height: 660 },
+            '72x48': { width: 1080, height: 720 }
+        };
+        this.currentBoardSize = '48x48';
+        
+        this.init();
+    }
+
+    init() {
+        this.setupCanvas();
+        this.bindEvents();
+        this.updateCanvasSize();
+    }
+
+    setupCanvas() {
+        this.canvas = document.getElementById('terrain-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        
+        this.backgroundCanvas = document.getElementById('background-canvas');
+        this.backgroundCtx = this.backgroundCanvas.getContext('2d');
+        
+        // Set canvas properties
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        // Set background canvas as background layer
+        this.backgroundCanvas.style.opacity = this.overlayOpacity;
+    }
+
+    bindEvents() {
+        // Tool selection
+        document.querySelectorAll('.tool-button').forEach(button => {
+            button.addEventListener('click', (e) => this.selectTool(e.target.dataset.tool));
+        });
+
+        // Drawing options
+        document.getElementById('pen-color').addEventListener('change', (e) => {
+            this.penColor = e.target.value;
+        });
+
+        document.getElementById('pen-thickness').addEventListener('input', (e) => {
+            this.penThickness = parseInt(e.target.value);
+            document.getElementById('thickness-value').textContent = `${this.penThickness}px`;
+        });
+
+        // Eraser options
+        document.getElementById('eraser-size').addEventListener('input', (e) => {
+            this.eraserSize = parseInt(e.target.value);
+            document.getElementById('eraser-size-value').textContent = `${this.eraserSize}px`;
+        });
+
+        // Board settings
+        document.getElementById('board-size').addEventListener('change', (e) => {
+            this.currentBoardSize = e.target.value;
+            this.updateCanvasSize();
+        });
+
+        document.getElementById('show-grid').addEventListener('change', (e) => {
+            this.showGrid = e.target.checked;
+            this.drawGrid();
+        });
+
+        document.getElementById('snap-to-grid').addEventListener('change', (e) => {
+            this.snapToGrid = e.target.checked;
+        });
+
+        // Background layout
+        document.getElementById('layout-import').addEventListener('change', (e) => {
+            this.handleLayoutImport(e);
+        });
+
+        document.getElementById('overlay-opacity').addEventListener('input', (e) => {
+            this.overlayOpacity = parseInt(e.target.value) / 100;
+            document.getElementById('opacity-value').textContent = `${e.target.value}%`;
+            this.backgroundCanvas.style.opacity = this.overlayOpacity;
+        });
+
+        document.getElementById('clear-overlay').addEventListener('click', () => {
+            this.clearBackgroundLayout();
+        });
+
+        // Canvas actions
+        document.getElementById('clear-canvas').addEventListener('click', () => {
+            this.clearCanvas();
+        });
+
+        // Terrain pieces
+        document.querySelectorAll('.terrain-piece').forEach(piece => {
+            piece.addEventListener('click', (e) => this.selectTerrainPiece(e.target.dataset.terrain));
+        });
+
+        // Canvas mouse events
+        this.canvas.addEventListener('mousedown', (e) => this.startDrawing(e));
+        this.canvas.addEventListener('mousemove', (e) => this.draw(e));
+        this.canvas.addEventListener('mouseup', () => this.stopDrawing());
+        this.canvas.addEventListener('mouseout', () => this.stopDrawing());
+
+        // Canvas touch events for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousemove', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            const mouseEvent = new MouseEvent('mouseup', {});
+            this.canvas.dispatchEvent(mouseEvent);
+        });
+
+        // Navigation events
+        document.getElementById('back-to-setup').addEventListener('click', () => {
+            this.backToSetup();
+        });
+
+        document.getElementById('export-board').addEventListener('click', () => {
+            this.exportBoard();
+        });
+    }
+
+    selectTool(tool) {
+        this.currentTool = tool;
+        
+        // Update UI
+        document.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-tool="${tool}"]`).classList.add('active');
+        
+        // Show/hide tool options
+        document.getElementById('drawing-options').style.display = tool === 'pen' ? 'block' : 'none';
+        document.getElementById('eraser-options').style.display = tool === 'eraser' ? 'block' : 'none';
+        document.getElementById('terrain-library').style.display = tool === 'terrain' ? 'block' : 'none';
+        
+        // Update cursor
+        this.canvas.className = '';
+        if (tool === 'eraser') {
+            this.canvas.classList.add('eraser-mode');
+        } else if (tool === 'terrain') {
+            this.canvas.classList.add('terrain-mode');
+        }
+    }
+
+    updateCanvasSize() {
+        const size = this.boardSizes[this.currentBoardSize];
+        const container = document.querySelector('.canvas-container');
+        const containerRect = container.getBoundingClientRect();
+        
+        // Scale canvas to fit container while maintaining aspect ratio
+        const scaleX = (containerRect.width - 40) / size.width;
+        const scaleY = (containerRect.height - 40) / size.height;
+        const scale = Math.min(scaleX, scaleY, 1);
+        
+        const scaledWidth = size.width * scale;
+        const scaledHeight = size.height * scale;
+        
+        // Update both canvases
+        [this.canvas, this.backgroundCanvas].forEach(canvas => {
+            canvas.width = size.width;
+            canvas.height = size.height;
+            canvas.style.width = `${scaledWidth}px`;
+            canvas.style.height = `${scaledHeight}px`;
+        });
+        
+        // Redraw grid if enabled
+        if (this.showGrid) {
+            this.drawGrid();
+        }
+        
+        // Redraw background if exists
+        if (this.backgroundImage) {
+            this.drawBackgroundImage();
+        }
+    }
+
+    drawGrid() {
+        const overlay = document.getElementById('canvas-overlay');
+        
+        if (!this.showGrid) {
+            overlay.innerHTML = '';
+            return;
+        }
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = this.canvas.width;
+        canvas.height = this.canvas.height;
+        canvas.style.width = this.canvas.style.width;
+        canvas.style.height = this.canvas.style.height;
+        canvas.style.position = 'absolute';
+        canvas.style.top = '50%';
+        canvas.style.left = '50%';
+        canvas.style.transform = 'translate(-50%, -50%)';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.opacity = '0.3';
+        
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 1;
+        
+        // Draw vertical lines
+        for (let x = 0; x <= canvas.width; x += this.gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+        }
+        
+        // Draw horizontal lines
+        for (let y = 0; y <= canvas.height; y += this.gridSize) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+        }
+        
+        overlay.innerHTML = '';
+        overlay.appendChild(canvas);
+    }
+
+    getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        
+        let x = (e.clientX - rect.left) * scaleX;
+        let y = (e.clientY - rect.top) * scaleY;
+        
+        // Snap to grid if enabled
+        if (this.snapToGrid && this.showGrid) {
+            x = Math.round(x / this.gridSize) * this.gridSize;
+            y = Math.round(y / this.gridSize) * this.gridSize;
+        }
+        
+        return { x, y };
+    }
+
+    startDrawing(e) {
+        if (this.currentTool === 'terrain') {
+            this.placeTerrainPiece(e);
+            return;
+        }
+        
+        this.isDrawing = true;
+        const pos = this.getMousePos(e);
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(pos.x, pos.y);
+    }
+
+    draw(e) {
+        if (!this.isDrawing || this.currentTool === 'terrain') return;
+        
+        const pos = this.getMousePos(e);
+        
+        if (this.currentTool === 'pen') {
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.strokeStyle = this.penColor;
+            this.ctx.lineWidth = this.penThickness;
+            this.ctx.lineTo(pos.x, pos.y);
+            this.ctx.stroke();
+        } else if (this.currentTool === 'eraser') {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.beginPath();
+            this.ctx.arc(pos.x, pos.y, this.eraserSize / 2, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
+    }
+
+    stopDrawing() {
+        this.isDrawing = false;
+        this.ctx.beginPath();
+    }
+
+    selectTerrainPiece(terrain) {
+        this.selectedTerrain = terrain;
+        
+        // Update UI
+        document.querySelectorAll('.terrain-piece').forEach(piece => {
+            piece.classList.remove('selected');
+        });
+        document.querySelector(`[data-terrain="${terrain}"]`).classList.add('selected');
+    }
+
+    placeTerrainPiece(e) {
+        if (!this.selectedTerrain) return;
+        
+        const pos = this.getMousePos(e);
+        const terrainText = this.getTerrainText(this.selectedTerrain);
+        
+        // Draw terrain piece as text for now (could be replaced with icons/images)
+        this.ctx.globalCompositeOperation = 'source-over';
+        this.ctx.font = '24px Arial';
+        this.ctx.fillStyle = this.penColor;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(terrainText, pos.x, pos.y);
+        
+        // Store terrain piece data
+        this.terrainPieces.push({
+            type: this.selectedTerrain,
+            x: pos.x,
+            y: pos.y,
+            text: terrainText
+        });
+    }
+
+    getTerrainText(terrainType) {
+        const terrainMap = {
+            'ruins': '🏛️',
+            'forest': '🌲',
+            'crates': '📦',
+            'hill': '⛰️',
+            'building': '🏢',
+            'crater': '🕳️'
+        };
+        return terrainMap[terrainType] || '❓';
+    }
+
+    async handleLayoutImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+            const imageDataUrl = await this.readFileAsDataURL(file);
+            this.backgroundImage = new Image();
+            this.backgroundImage.onload = () => {
+                this.drawBackgroundImage();
+            };
+            this.backgroundImage.src = imageDataUrl;
+        } catch (error) {
+            console.error('Error loading background image:', error);
+            alert('Error loading background image. Please try again.');
+        }
+    }
+
+    drawBackgroundImage() {
+        if (!this.backgroundImage) return;
+        
+        this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+        this.backgroundCtx.drawImage(
+            this.backgroundImage, 
+            0, 0, 
+            this.backgroundCanvas.width, 
+            this.backgroundCanvas.height
+        );
+    }
+
+    clearBackgroundLayout() {
+        this.backgroundImage = null;
+        this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+        document.getElementById('layout-import').value = '';
+    }
+
+    clearCanvas() {
+        if (confirm('Are you sure you want to clear the entire board? This action cannot be undone.')) {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.terrainPieces = [];
+        }
+    }
+
+    exportBoard() {
+        // Create a temporary canvas to combine all layers
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = this.canvas.width;
+        exportCanvas.height = this.canvas.height;
+        const exportCtx = exportCanvas.getContext('2d');
+        
+        // White background
+        exportCtx.fillStyle = '#ffffff';
+        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        
+        // Draw background image if exists
+        if (this.backgroundImage) {
+            exportCtx.globalAlpha = this.overlayOpacity;
+            exportCtx.drawImage(this.backgroundCanvas, 0, 0);
+            exportCtx.globalAlpha = 1.0;
+        }
+        
+        // Draw main canvas content
+        exportCtx.drawImage(this.canvas, 0, 0);
+        
+        // Download the image
+        exportCanvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `terrain-plan-${new Date().toISOString().slice(0, 10)}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    backToSetup() {
+        document.getElementById('terrain-planner-section').classList.remove('active');
+        document.getElementById('setup-section').classList.add('active');
+    }
+
+    readFileAsDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = e => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+}
+
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new BattleAssistant();
+    const battleAssistant = new BattleAssistant();
+    let terrainPlanner = null;
+    
+    // Terrain planner navigation
+    document.getElementById('open-terrain-planner').addEventListener('click', () => {
+        document.getElementById('setup-section').classList.remove('active');
+        document.getElementById('terrain-planner-section').classList.add('active');
+        
+        // Initialize terrain planner if not already done
+        if (!terrainPlanner) {
+            terrainPlanner = new TerrainPlanner();
+        }
+    });
 });
