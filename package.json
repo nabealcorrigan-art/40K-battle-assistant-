@@ -1,0 +1,11 @@
+{
+  "name": "40k-battle-assistant",
+  "version": "1.0.0",
+  "description": "Warhammer 40K Battle Assistant",
+  "main": "script.js",
+  "scripts": {
+    "start": "node script.js"
+  },
+  "author": "",
+  "license": "ISC"
+}
