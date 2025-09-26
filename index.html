@@ -10,6 +10,11 @@
     <header>
         <h1>40K Battle Assistant</h1>
         <p>Record your battles, track your stratagems, and never miss a tactical opportunity</p>
+        <nav class="main-nav">
+            <button id="nav-setup" class="nav-button active" data-section="setup-section">Setup</button>
+            <button id="nav-battle" class="nav-button" data-section="battle-section">Battle</button>
+            <button id="nav-whiteboard" class="nav-button" data-section="strategy-whiteboard">Strategy Board</button>
+        </nav>
     </header>
 
     <main>
@@ -166,6 +171,150 @@
             </div>
         </section>
 
+        <!-- Strategy Whiteboard Section -->
+        <section id="strategy-whiteboard" class="section">
+            <div class="whiteboard-header">
+                <h2>Strategy Whiteboard</h2>
+                <div class="whiteboard-controls">
+                    <button id="clear-whiteboard" class="warning-button">Clear Board</button>
+                    <button id="export-whiteboard" class="primary-button">Export Strategy</button>
+                </div>
+            </div>
+
+            <div class="whiteboard-content">
+                <!-- Sidebar with tools -->
+                <div class="whiteboard-sidebar">
+                    <div class="tool-section">
+                        <h4>Drawing Tools</h4>
+                        <div class="tool-buttons">
+                            <button class="tool-button active" data-tool="pen" title="Drawing Pen">
+                                ✏️ Pen
+                            </button>
+                            <button class="tool-button" data-tool="line" title="Straight Line">
+                                📏 Line
+                            </button>
+                            <button class="tool-button" data-tool="arrow" title="Arrow">
+                                ➡️ Arrow
+                            </button>
+                            <button class="tool-button" data-tool="rectangle" title="Rectangle">
+                                ⬛ Rectangle
+                            </button>
+                            <button class="tool-button" data-tool="circle" title="Circle">
+                                ⭕ Circle
+                            </button>
+                            <button class="tool-button" data-tool="eraser" title="Eraser">
+                                🧽 Eraser
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="drawing-options" id="whiteboard-drawing-options">
+                        <h4>Drawing Options</h4>
+                        <div class="option-group">
+                            <label for="whiteboard-pen-color">Color:</label>
+                            <input type="color" id="whiteboard-pen-color" value="#FF0000">
+                        </div>
+                        <div class="option-group">
+                            <label for="whiteboard-pen-thickness">Thickness:</label>
+                            <input type="range" id="whiteboard-pen-thickness" min="1" max="10" value="2">
+                            <span id="whiteboard-thickness-value">2px</span>
+                        </div>
+                    </div>
+
+                    <div class="overlay-selection">
+                        <h4>Background Layout</h4>
+                        <div class="layout-thumbnails">
+                            <div class="layout-thumbnail" data-layout="none" title="No Background">
+                                <div class="thumbnail-content">None</div>
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout1.png" title="Layout 1">
+                                <img src="CA_TerrainLayout1.png" alt="Layout 1">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout2.png" title="Layout 2">
+                                <img src="CA_TerrainLayout2.png" alt="Layout 2">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout3.png" title="Layout 3">
+                                <img src="CA_TerrainLayout3.png" alt="Layout 3">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout4.png" title="Layout 4">
+                                <img src="CA_TerrainLayout4.png" alt="Layout 4">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout5.png" title="Layout 5">
+                                <img src="CA_TerrainLayout5.png" alt="Layout 5">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout6.png" title="Layout 6">
+                                <img src="CA_TerrainLayout6.png" alt="Layout 6">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout7.png" title="Layout 7">
+                                <img src="CA_TerrainLayout7.png" alt="Layout 7">
+                            </div>
+                            <div class="layout-thumbnail" data-layout="CA_TerrainLayout8.png" title="Layout 8">
+                                <img src="CA_TerrainLayout8.png" alt="Layout 8">
+                            </div>
+                        </div>
+                        <div class="option-group">
+                            <label for="whiteboard-overlay-opacity">Opacity:</label>
+                            <input type="range" id="whiteboard-overlay-opacity" min="0" max="100" value="70">
+                            <span id="whiteboard-opacity-value">70%</span>
+                        </div>
+                    </div>
+
+                    <div class="custom-image-section">
+                        <h4>Custom Image Overlay</h4>
+                        <div class="image-upload-section">
+                            <input type="file" id="custom-image-upload" accept="image/*" class="file-input">
+                            <label for="custom-image-upload" class="file-label">Upload Image</label>
+                            <button id="remove-custom-image" class="secondary-button" style="display: none;">Remove Image</button>
+                        </div>
+                        
+                        <div id="custom-image-controls" class="custom-image-controls" style="display: none;">
+                            <div class="scaling-controls">
+                                <h5>Scaling Controls</h5>
+                                <div class="scaling-row">
+                                    <div class="option-group">
+                                        <label for="image-width-scale">Width (%):</label>
+                                        <input type="range" id="image-width-scale" min="10" max="300" value="100">
+                                        <span id="width-scale-value">100%</span>
+                                    </div>
+                                    <div class="option-group">
+                                        <label for="image-height-scale">Height (%):</label>
+                                        <input type="range" id="image-height-scale" min="10" max="300" value="100">
+                                        <span id="height-scale-value">100%</span>
+                                    </div>
+                                </div>
+                                <div class="option-group">
+                                    <label>
+                                        <input type="checkbox" id="maintain-aspect-ratio" checked> Lock Aspect Ratio
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="image-controls">
+                                <div class="option-group">
+                                    <label for="custom-image-opacity">Image Opacity:</label>
+                                    <input type="range" id="custom-image-opacity" min="0" max="100" value="100">
+                                    <span id="custom-opacity-value">100%</span>
+                                </div>
+                                <div class="option-group">
+                                    <label>
+                                        <input type="checkbox" id="lock-image-position"> Lock Position
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Canvas container -->
+                <div class="whiteboard-canvas-container">
+                    <canvas id="strategy-canvas" width="800" height="600"></canvas>
+                    <canvas id="strategy-background-canvas" width="800" height="600"></canvas>
+                    <div id="custom-image-overlay" class="custom-image-overlay"></div>
+                    <div class="canvas-overlay" id="strategy-canvas-overlay"></div>
+                </div>
+            </div>
+        </section>
+
         <!-- Army and Stratagems Reference -->
         <aside id="reference-panel" class="reference-panel">
             <div class="reference-toggle">
@@ -183,150 +332,6 @@
             </div>
         </aside>
     </main>
-
-    <!-- Strategy Whiteboard Section -->
-    <section id="strategy-whiteboard" class="strategy-whiteboard">
-        <div class="whiteboard-header">
-            <h2>Strategy Whiteboard</h2>
-            <div class="whiteboard-controls">
-                <button id="clear-whiteboard" class="warning-button">Clear Board</button>
-                <button id="export-whiteboard" class="primary-button">Export Strategy</button>
-            </div>
-        </div>
-
-        <div class="whiteboard-content">
-            <!-- Sidebar with tools -->
-            <div class="whiteboard-sidebar">
-                <div class="tool-section">
-                    <h4>Drawing Tools</h4>
-                    <div class="tool-buttons">
-                        <button class="tool-button active" data-tool="pen" title="Drawing Pen">
-                            ✏️ Pen
-                        </button>
-                        <button class="tool-button" data-tool="line" title="Straight Line">
-                            📏 Line
-                        </button>
-                        <button class="tool-button" data-tool="arrow" title="Arrow">
-                            ➡️ Arrow
-                        </button>
-                        <button class="tool-button" data-tool="rectangle" title="Rectangle">
-                            ⬛ Rectangle
-                        </button>
-                        <button class="tool-button" data-tool="circle" title="Circle">
-                            ⭕ Circle
-                        </button>
-                        <button class="tool-button" data-tool="eraser" title="Eraser">
-                            🧽 Eraser
-                        </button>
-                    </div>
-                </div>
-
-                <div class="drawing-options" id="whiteboard-drawing-options">
-                    <h4>Drawing Options</h4>
-                    <div class="option-group">
-                        <label for="whiteboard-pen-color">Color:</label>
-                        <input type="color" id="whiteboard-pen-color" value="#FF0000">
-                    </div>
-                    <div class="option-group">
-                        <label for="whiteboard-pen-thickness">Thickness:</label>
-                        <input type="range" id="whiteboard-pen-thickness" min="1" max="10" value="2">
-                        <span id="whiteboard-thickness-value">2px</span>
-                    </div>
-                </div>
-
-                <div class="overlay-selection">
-                    <h4>Background Layout</h4>
-                    <div class="layout-thumbnails">
-                        <div class="layout-thumbnail" data-layout="none" title="No Background">
-                            <div class="thumbnail-content">None</div>
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout1.png" title="Layout 1">
-                            <img src="CA_TerrainLayout1.png" alt="Layout 1">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout2.png" title="Layout 2">
-                            <img src="CA_TerrainLayout2.png" alt="Layout 2">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout3.png" title="Layout 3">
-                            <img src="CA_TerrainLayout3.png" alt="Layout 3">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout4.png" title="Layout 4">
-                            <img src="CA_TerrainLayout4.png" alt="Layout 4">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout5.png" title="Layout 5">
-                            <img src="CA_TerrainLayout5.png" alt="Layout 5">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout6.png" title="Layout 6">
-                            <img src="CA_TerrainLayout6.png" alt="Layout 6">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout7.png" title="Layout 7">
-                            <img src="CA_TerrainLayout7.png" alt="Layout 7">
-                        </div>
-                        <div class="layout-thumbnail" data-layout="CA_TerrainLayout8.png" title="Layout 8">
-                            <img src="CA_TerrainLayout8.png" alt="Layout 8">
-                        </div>
-                    </div>
-                    <div class="option-group">
-                        <label for="whiteboard-overlay-opacity">Opacity:</label>
-                        <input type="range" id="whiteboard-overlay-opacity" min="0" max="100" value="70">
-                        <span id="whiteboard-opacity-value">70%</span>
-                    </div>
-                </div>
-
-                <div class="custom-image-section">
-                    <h4>Custom Image Overlay</h4>
-                    <div class="image-upload-section">
-                        <input type="file" id="custom-image-upload" accept="image/*" class="file-input">
-                        <label for="custom-image-upload" class="file-label">Upload Image</label>
-                        <button id="remove-custom-image" class="secondary-button" style="display: none;">Remove Image</button>
-                    </div>
-                    
-                    <div id="custom-image-controls" class="custom-image-controls" style="display: none;">
-                        <div class="scaling-controls">
-                            <h5>Scaling Controls</h5>
-                            <div class="scaling-row">
-                                <div class="option-group">
-                                    <label for="image-width-scale">Width (%):</label>
-                                    <input type="range" id="image-width-scale" min="10" max="300" value="100">
-                                    <span id="width-scale-value">100%</span>
-                                </div>
-                                <div class="option-group">
-                                    <label for="image-height-scale">Height (%):</label>
-                                    <input type="range" id="image-height-scale" min="10" max="300" value="100">
-                                    <span id="height-scale-value">100%</span>
-                                </div>
-                            </div>
-                            <div class="option-group">
-                                <label>
-                                    <input type="checkbox" id="maintain-aspect-ratio" checked> Lock Aspect Ratio
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="image-controls">
-                            <div class="option-group">
-                                <label for="custom-image-opacity">Image Opacity:</label>
-                                <input type="range" id="custom-image-opacity" min="0" max="100" value="100">
-                                <span id="custom-opacity-value">100%</span>
-                            </div>
-                            <div class="option-group">
-                                <label>
-                                    <input type="checkbox" id="lock-image-position"> Lock Position
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Canvas container -->
-            <div class="whiteboard-canvas-container">
-                <canvas id="strategy-canvas" width="800" height="600"></canvas>
-                <canvas id="strategy-background-canvas" width="800" height="600"></canvas>
-                <div id="custom-image-overlay" class="custom-image-overlay"></div>
-                <div class="canvas-overlay" id="strategy-canvas-overlay"></div>
-            </div>
-        </div>
-    </section>
 
     <script src="script.js"></script>
 </body>

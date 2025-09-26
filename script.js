@@ -117,6 +117,11 @@ class BattleAssistant {
     }
 
     bindEvents() {
+        // Navigation events
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', (e) => this.switchSection(e.target.dataset.section));
+        });
+
         // File import events
         document.getElementById('army-import').addEventListener('change', (e) => this.handleArmyImport(e));
         document.getElementById('stratagem-import').addEventListener('change', (e) => this.handleStratagemImport(e));
@@ -410,8 +415,7 @@ class BattleAssistant {
     }
 
     startBattle() {
-        document.getElementById('setup-section').classList.remove('active');
-        document.getElementById('battle-section').classList.add('active');
+        this.switchSection('battle-section');
         
         this.initializeTurn(1);
         this.updateStratagemReminders();
@@ -500,6 +504,29 @@ class BattleAssistant {
         `;
         
         historyLog.insertBefore(historyEntry, historyLog.firstChild);
+    }
+
+    switchSection(sectionId) {
+        // Hide all sections
+        document.querySelectorAll('.section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Show selected section
+        document.getElementById(sectionId).classList.add('active');
+        
+        // Update navigation buttons
+        document.querySelectorAll('.nav-button').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.section === sectionId);
+        });
+        
+        // If switching to whiteboard, ensure canvas is properly sized
+        if (sectionId === 'strategy-whiteboard' && window.strategyWhiteboard) {
+            // Delay to ensure the section is visible
+            setTimeout(() => {
+                window.strategyWhiteboard.updateCanvasSize();
+            }, 100);
+        }
     }
 
     switchPhase(phase) {
@@ -730,8 +757,7 @@ class BattleAssistant {
             document.getElementById('history-log').innerHTML = '';
             
             // Switch back to setup
-            document.getElementById('battle-section').classList.remove('active');
-            document.getElementById('setup-section').classList.add('active');
+            this.switchSection('setup-section');
             
             this.saveToLocalStorage();
         }
