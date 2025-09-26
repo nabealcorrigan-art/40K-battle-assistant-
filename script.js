@@ -1,5 +1,102 @@
 // 40K Battle Assistant JavaScript
 
+// Shape class to represent drawable shapes
+class Shape {
+    constructor(id, type, startPoint, endPoint, color, thickness) {
+        this.id = id;
+        this.type = type;
+        this.startPoint = startPoint;
+        this.endPoint = endPoint;
+        this.color = color;
+        this.thickness = thickness;
+        this.selected = false;
+    }
+    
+    // Check if a point is near this shape (for selection)
+    isPointNear(point, tolerance = 10) {
+        switch (this.type) {
+            case 'line':
+            case 'arrow':
+                return this.isPointNearLine(point, tolerance);
+            case 'rectangle':
+                return this.isPointNearRectangle(point, tolerance);
+            case 'circle':
+                return this.isPointNearCircle(point, tolerance);
+            default:
+                return false;
+        }
+    }
+    
+    isPointNearLine(point, tolerance) {
+        const { startPoint, endPoint } = this;
+        const A = point.x - startPoint.x;
+        const B = point.y - startPoint.y;
+        const C = endPoint.x - startPoint.x;
+        const D = endPoint.y - startPoint.y;
+        
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+        if (lenSq !== 0) param = dot / lenSq;
+        
+        let xx, yy;
+        if (param < 0) {
+            xx = startPoint.x;
+            yy = startPoint.y;
+        } else if (param > 1) {
+            xx = endPoint.x;
+            yy = endPoint.y;
+        } else {
+            xx = startPoint.x + param * C;
+            yy = startPoint.y + param * D;
+        }
+        
+        const dx = point.x - xx;
+        const dy = point.y - yy;
+        return Math.sqrt(dx * dx + dy * dy) <= tolerance;
+    }
+    
+    isPointNearRectangle(point, tolerance) {
+        const { startPoint, endPoint } = this;
+        const left = Math.min(startPoint.x, endPoint.x) - tolerance;
+        const right = Math.max(startPoint.x, endPoint.x) + tolerance;
+        const top = Math.min(startPoint.y, endPoint.y) - tolerance;
+        const bottom = Math.max(startPoint.y, endPoint.y) + tolerance;
+        
+        // Check if point is inside the expanded rectangle
+        if (point.x >= left && point.x <= right && point.y >= top && point.y <= bottom) {
+            // Check if it's near the border (not inside)
+            const innerLeft = Math.min(startPoint.x, endPoint.x) + tolerance;
+            const innerRight = Math.max(startPoint.x, endPoint.x) - tolerance;
+            const innerTop = Math.min(startPoint.y, endPoint.y) + tolerance;
+            const innerBottom = Math.max(startPoint.y, endPoint.y) - tolerance;
+            
+            return !(point.x > innerLeft && point.x < innerRight && point.y > innerTop && point.y < innerBottom);
+        }
+        return false;
+    }
+    
+    isPointNearCircle(point, tolerance) {
+        const { startPoint, endPoint } = this;
+        const radius = Math.sqrt(Math.pow(endPoint.x - startPoint.x, 2) + Math.pow(endPoint.y - startPoint.y, 2));
+        const distance = Math.sqrt(Math.pow(point.x - startPoint.x, 2) + Math.pow(point.y - startPoint.y, 2));
+        return Math.abs(distance - radius) <= tolerance;
+    }
+    
+    // Move the shape by a delta
+    move(deltaX, deltaY) {
+        this.startPoint.x += deltaX;
+        this.startPoint.y += deltaY;
+        this.endPoint.x += deltaX;
+        this.endPoint.y += deltaY;
+    }
+    
+    // Update shape size (for circles and rectangles)
+    resize(newEndPoint) {
+        this.endPoint = newEndPoint;
+    }
+}
+
 class BattleAssistant {
     constructor() {
         this.currentTurn = 1;
@@ -644,12 +741,9 @@ class BattleAssistant {
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     const battleAssistant = new BattleAssistant();
-    let strategyWhiteboard = null;
     
-    // Initialize strategy whiteboard
-    if (!strategyWhiteboard) {
-        strategyWhiteboard = new StrategyWhiteboard();
-    }
+    // Initialize strategy whiteboard and make it globally accessible
+    window.strategyWhiteboard = new StrategyWhiteboard();
 });
 
 /**
@@ -672,6 +766,13 @@ class StrategyWhiteboard {
         this.startPoint = null;
         this.previewCanvas = null;
         this.previewCtx = null;
+        
+        // Shape management system
+        this.shapes = [];
+        this.selectedShape = null;
+        this.isDraggingShape = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.shapeIdCounter = 0;
         
         // Custom image overlay properties
         this.customImage = null;
@@ -722,11 +823,19 @@ class StrategyWhiteboard {
         // Drawing options
         document.getElementById('whiteboard-pen-color').addEventListener('change', (e) => {
             this.penColor = e.target.value;
+            // Update selected shape color if one is selected
+            if (this.selectedShape) {
+                this.updateSelectedShapeColor(e.target.value);
+            }
         });
 
         document.getElementById('whiteboard-pen-thickness').addEventListener('input', (e) => {
             this.penThickness = parseInt(e.target.value);
             document.getElementById('whiteboard-thickness-value').textContent = `${this.penThickness}px`;
+            // Update selected shape thickness if one is selected
+            if (this.selectedShape) {
+                this.updateSelectedShapeThickness(this.penThickness);
+            }
         });
 
         // Overlay selection
@@ -820,6 +929,19 @@ class StrategyWhiteboard {
 
         // Custom image dragging events
         this.setupCustomImageDragging();
+        
+        // Keyboard events for shape manipulation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if (this.selectedShape) {
+                    e.preventDefault();
+                    this.deleteSelectedShape();
+                }
+            }
+            if (e.key === 'Escape') {
+                this.deselectAllShapes();
+            }
+        });
     }
 
     selectTool(tool) {
@@ -928,6 +1050,11 @@ class StrategyWhiteboard {
     }
     
     hasCanvasContent() {
+        // Check if there are any shapes or pen/eraser drawings
+        if (this.shapes.length > 0) {
+            return true;
+        }
+        
         const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
         const data = imageData.data;
         
@@ -952,8 +1079,26 @@ class StrategyWhiteboard {
     }
 
     startDrawing(e) {
-        this.isDrawing = true;
         const pos = this.getMousePos(e);
+        
+        // Check if we're clicking on an existing shape for selection/dragging
+        if (this.currentTool !== 'pen' && this.currentTool !== 'eraser') {
+            const clickedShape = this.getShapeAtPoint(pos);
+            if (clickedShape) {
+                this.selectShape(clickedShape);
+                this.isDraggingShape = true;
+                this.dragOffset = {
+                    x: pos.x - clickedShape.startPoint.x,
+                    y: pos.y - clickedShape.startPoint.y
+                };
+                return;
+            } else {
+                // Deselect if clicking on empty space
+                this.deselectAllShapes();
+            }
+        }
+        
+        this.isDrawing = true;
         
         if (['line', 'arrow', 'rectangle', 'circle'].includes(this.currentTool)) {
             this.startPoint = pos;
@@ -965,9 +1110,21 @@ class StrategyWhiteboard {
     }
 
     draw(e) {
-        if (!this.isDrawing) return;
-        
         const pos = this.getMousePos(e);
+        
+        // Handle shape dragging
+        if (this.isDraggingShape && this.selectedShape) {
+            const newX = pos.x - this.dragOffset.x;
+            const newY = pos.y - this.dragOffset.y;
+            const deltaX = newX - this.selectedShape.startPoint.x;
+            const deltaY = newY - this.selectedShape.startPoint.y;
+            
+            this.selectedShape.move(deltaX, deltaY);
+            this.redrawCanvas();
+            return;
+        }
+        
+        if (!this.isDrawing) return;
         
         if (this.currentTool === 'pen') {
             this.ctx.globalCompositeOperation = 'source-over';
@@ -1027,13 +1184,19 @@ class StrategyWhiteboard {
     }
 
     stopDrawing(e) {
+        // Handle shape dragging end
+        if (this.isDraggingShape) {
+            this.isDraggingShape = false;
+            return;
+        }
+        
         if (!this.isDrawing) return;
         
         this.isDrawing = false;
         
         if (['line', 'arrow', 'rectangle', 'circle'].includes(this.currentTool) && this.startPoint && e) {
             const pos = this.getMousePos(e);
-            this.drawFinalShape(this.startPoint, pos);
+            this.createShape(this.currentTool, this.startPoint, pos);
             this.startPoint = null;
         }
         
@@ -1085,6 +1248,177 @@ class StrategyWhiteboard {
         ctx.moveTo(toX, toY);
         ctx.lineTo(toX - headLength * Math.cos(angle + Math.PI/6), toY - headLength * Math.sin(angle + Math.PI/6));
         ctx.stroke();
+    }
+
+    // Shape management methods
+    createShape(type, startPoint, endPoint) {
+        const shape = new Shape(
+            this.shapeIdCounter++,
+            type,
+            { x: startPoint.x, y: startPoint.y },
+            { x: endPoint.x, y: endPoint.y },
+            this.penColor,
+            this.penThickness
+        );
+        this.shapes.push(shape);
+        this.redrawCanvas();
+    }
+
+    getShapeAtPoint(point) {
+        // Check from top to bottom (last drawn first)
+        for (let i = this.shapes.length - 1; i >= 0; i--) {
+            if (this.shapes[i].isPointNear(point)) {
+                return this.shapes[i];
+            }
+        }
+        return null;
+    }
+
+    selectShape(shape) {
+        this.deselectAllShapes();
+        shape.selected = true;
+        this.selectedShape = shape;
+        this.showShapeControls(shape);
+        this.redrawCanvas();
+    }
+
+    deselectAllShapes() {
+        this.shapes.forEach(shape => {
+            shape.selected = false;
+        });
+        this.selectedShape = null;
+        this.hideShapeControls();
+        this.redrawCanvas();
+    }
+
+    deleteSelectedShape() {
+        if (this.selectedShape) {
+            const index = this.shapes.indexOf(this.selectedShape);
+            if (index > -1) {
+                this.shapes.splice(index, 1);
+                this.selectedShape = null;
+                this.hideShapeControls();
+                this.redrawCanvas();
+            }
+        }
+    }
+
+    updateSelectedShapeColor(color) {
+        if (this.selectedShape) {
+            this.selectedShape.color = color;
+            this.redrawCanvas();
+        }
+    }
+
+    updateSelectedShapeThickness(thickness) {
+        if (this.selectedShape) {
+            this.selectedShape.thickness = thickness;
+            this.redrawCanvas();
+        }
+    }
+
+    redrawCanvas() {
+        // Clear the main canvas
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Redraw all shapes
+        this.shapes.forEach(shape => {
+            this.drawShape(shape);
+        });
+    }
+
+    drawShape(shape) {
+        this.ctx.save();
+        this.ctx.strokeStyle = shape.color;
+        this.ctx.lineWidth = shape.thickness;
+        this.ctx.globalCompositeOperation = 'source-over';
+        
+        // Add selection highlight
+        if (shape.selected) {
+            this.ctx.shadowColor = '#00FFFF';
+            this.ctx.shadowBlur = 8;
+        }
+        
+        switch (shape.type) {
+            case 'line':
+                this.ctx.beginPath();
+                this.ctx.moveTo(shape.startPoint.x, shape.startPoint.y);
+                this.ctx.lineTo(shape.endPoint.x, shape.endPoint.y);
+                this.ctx.stroke();
+                break;
+            case 'arrow':
+                this.drawArrow(this.ctx, shape.startPoint.x, shape.startPoint.y, shape.endPoint.x, shape.endPoint.y);
+                break;
+            case 'rectangle':
+                this.ctx.beginPath();
+                this.ctx.rect(shape.startPoint.x, shape.startPoint.y, 
+                             shape.endPoint.x - shape.startPoint.x, 
+                             shape.endPoint.y - shape.startPoint.y);
+                this.ctx.stroke();
+                break;
+            case 'circle':
+                const radius = Math.sqrt(Math.pow(shape.endPoint.x - shape.startPoint.x, 2) + 
+                                       Math.pow(shape.endPoint.y - shape.startPoint.y, 2));
+                this.ctx.beginPath();
+                this.ctx.arc(shape.startPoint.x, shape.startPoint.y, radius, 0, 2 * Math.PI);
+                this.ctx.stroke();
+                break;
+        }
+        
+        this.ctx.restore();
+    }
+
+    showShapeControls(shape) {
+        // Update the drawing options to show selected shape properties
+        const colorInput = document.getElementById('whiteboard-pen-color');
+        const thicknessInput = document.getElementById('whiteboard-pen-thickness');
+        const thicknessValue = document.getElementById('whiteboard-thickness-value');
+        
+        if (colorInput) {
+            colorInput.value = shape.color;
+        }
+        if (thicknessInput) {
+            thicknessInput.value = shape.thickness;
+            thicknessValue.textContent = `${shape.thickness}px`;
+        }
+        
+        // Show shape controls if they don't exist
+        this.createShapeControlsUI();
+    }
+
+    hideShapeControls() {
+        const shapeControls = document.getElementById('shape-controls');
+        if (shapeControls) {
+            shapeControls.style.display = 'none';
+        }
+    }
+
+    createShapeControlsUI() {
+        let shapeControls = document.getElementById('shape-controls');
+        if (!shapeControls) {
+            shapeControls = document.createElement('div');
+            shapeControls.id = 'shape-controls';
+            shapeControls.className = 'shape-controls';
+            shapeControls.innerHTML = `
+                <h4>Selected Shape</h4>
+                <div class="shape-control-buttons">
+                    <button id="delete-shape" class="warning-button">Delete Shape</button>
+                </div>
+                <div class="option-group">
+                    <label>Shape color and thickness can be changed using the Drawing Options above</label>
+                </div>
+            `;
+            
+            // Insert after drawing options
+            const drawingOptions = document.getElementById('whiteboard-drawing-options');
+            drawingOptions.parentNode.insertBefore(shapeControls, drawingOptions.nextSibling);
+            
+            // Bind delete button
+            document.getElementById('delete-shape').addEventListener('click', () => {
+                this.deleteSelectedShape();
+            });
+        }
+        shapeControls.style.display = 'block';
     }
 
     // Custom Image Overlay Methods
@@ -1271,6 +1605,9 @@ class StrategyWhiteboard {
     clearWhiteboard() {
         if (confirm('Are you sure you want to clear the strategy whiteboard? This action cannot be undone.')) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.shapes = [];
+            this.selectedShape = null;
+            this.hideShapeControls();
             this.updateCanvasState();
         }
     }

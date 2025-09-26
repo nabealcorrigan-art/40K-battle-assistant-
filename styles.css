@@ -673,6 +673,57 @@ main {
     cursor: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3QgeD0iNyIgeT0iNyIgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjUpIiByeD0iMiIvPgo8L3N2Zz4K') 12 12, auto;
 }
 
+/* Shape Controls */
+.shape-controls {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    display: none;
+}
+
+.shape-controls h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.shape-control-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.shape-control-buttons button {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--surface-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.shape-control-buttons button:hover {
+    background: var(--primary-color);
+    color: var(--surface-color);
+}
+
+.shape-control-buttons .warning-button {
+    background: #dc3545;
+    color: white;
+    border-color: #dc3545;
+}
+
+.shape-control-buttons .warning-button:hover {
+    background: #c82333;
+    border-color: #c82333;
+}
+
 /* Custom Image Overlay Styles */
 .custom-image-section {
     margin-top: 1rem;
