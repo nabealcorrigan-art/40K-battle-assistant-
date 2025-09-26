@@ -1126,7 +1126,7 @@ class StrategyWhiteboard {
         this.penColor = '#FF0000';
         this.penThickness = 2;
         this.eraserSize = 15;
-        this.overlayOpacity = 0.5;
+        this.overlayOpacity = 0.7;
         this.currentLayout = 'none';
         this.startPoint = null;
         this.previewCanvas = null;
@@ -1306,6 +1306,9 @@ class StrategyWhiteboard {
         } else {
             this.loadBackgroundLayout(layout);
         }
+        
+        // Update canvas state to show/hide placeholder
+        this.updateCanvasState();
     }
 
     loadBackgroundLayout(imagePath) {
@@ -1367,6 +1370,32 @@ class StrategyWhiteboard {
         if (this.customImageElement) {
             this.updateCustomImageDisplay();
         }
+    }
+
+    updateCanvasState() {
+        const container = document.querySelector('.whiteboard-canvas-container');
+        const hasDrawing = this.hasCanvasContent();
+        const hasBackground = this.currentLayout !== 'none';
+        const hasCustomImage = this.customImage !== null;
+        
+        if (hasDrawing || hasBackground || hasCustomImage) {
+            container.classList.add('has-content');
+        } else {
+            container.classList.remove('has-content');
+        }
+    }
+    
+    hasCanvasContent() {
+        const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+        const data = imageData.data;
+        
+        // Check if any pixel has non-zero alpha (indicating drawn content)
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     getMousePos(e) {
@@ -1467,6 +1496,9 @@ class StrategyWhiteboard {
         }
         
         this.ctx.beginPath();
+        
+        // Update canvas state to hide placeholder if there's content
+        this.updateCanvasState();
     }
 
     drawFinalShape(start, end) {
@@ -1560,6 +1592,9 @@ class StrategyWhiteboard {
         this.customImagePosition = { x: 0, y: 0 };
         this.customImageScale = { width: 100, height: 100 };
         this.updateImageScaleInputs();
+        
+        // Update canvas state
+        this.updateCanvasState();
     }
 
     updateImageScale(dimension, value) {
@@ -1685,12 +1720,16 @@ class StrategyWhiteboard {
             document.getElementById('lock-image-position').checked = false;
             this.updateImageScaleValues();
             document.getElementById('custom-opacity-value').textContent = '100%';
+            
+            // Update canvas state
+            this.updateCanvasState();
         }
     }
 
     clearWhiteboard() {
         if (confirm('Are you sure you want to clear the strategy whiteboard? This action cannot be undone.')) {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.updateCanvasState();
         }
     }
 
