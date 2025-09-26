@@ -916,17 +916,18 @@ main {
     left: 50%;
     transform: translate(-50%, -50%);
     border-radius: 4px;
-    background: #f5f5f5;
     cursor: crosshair;
     border: 2px dashed rgba(76, 175, 80, 0.3);
 }
 
 #strategy-background-canvas {
     z-index: 1;
+    background: #f5f5f5;
 }
 
 #strategy-canvas {
     z-index: 2;
+    background: transparent;
 }
 
 #strategy-canvas.line-mode {

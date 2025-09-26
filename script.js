@@ -1316,6 +1316,7 @@ class StrategyWhiteboard {
         img.onload = () => {
             this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
             this.backgroundCtx.drawImage(img, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+            this.updateCanvasState();
         };
         img.onerror = () => {
             console.error('Could not load layout image:', imagePath);
