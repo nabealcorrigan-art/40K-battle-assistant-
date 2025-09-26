@@ -29,6 +29,7 @@ header {
     padding: 1.5rem;
     text-align: center;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    position: relative;
 }
 
 header h1 {
@@ -40,6 +41,15 @@ header h1 {
 header p {
     font-size: 1.1rem;
     opacity: 0.9;
+}
+
+.version-info {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    color: var(--secondary-color);
 }
 
 main {
