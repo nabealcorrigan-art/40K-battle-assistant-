@@ -163,6 +163,16 @@ class BattleAssistant {
         // Whiteboard toggle
         document.getElementById('toggle-whiteboard').addEventListener('click', () => this.toggleWhiteboardPanel());
         
+        // Whiteboard modal close button
+        document.getElementById('close-whiteboard-modal').addEventListener('click', () => this.toggleWhiteboardPanel());
+        
+        // Close modal when clicking outside
+        document.getElementById('strategy-whiteboard-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'strategy-whiteboard-modal') {
+                this.toggleWhiteboardPanel();
+            }
+        });
+        
         // Auto-save every 10 seconds
         setInterval(() => this.saveToLocalStorage(), 10000);
     }
@@ -654,18 +664,20 @@ class BattleAssistant {
     }
 
     toggleWhiteboardPanel() {
-        const whiteboardSection = document.getElementById('strategy-whiteboard');
+        const whiteboardModal = document.getElementById('strategy-whiteboard-modal');
         const toggleButton = document.getElementById('toggle-whiteboard');
         
-        whiteboardSection.classList.toggle('hidden');
+        whiteboardModal.classList.toggle('hidden');
         
         // Update button active state based on whiteboard visibility
-        if (whiteboardSection.classList.contains('hidden')) {
+        if (whiteboardModal.classList.contains('hidden')) {
             toggleButton.classList.remove('active');
         } else {
             toggleButton.classList.add('active');
-            // Scroll to whiteboard when showing it
-            whiteboardSection.scrollIntoView({ behavior: 'smooth' });
+            // Initialize canvas sizing when modal opens
+            if (window.strategyWhiteboard) {
+                window.strategyWhiteboard.updateCanvasSize();
+            }
         }
     }
 
