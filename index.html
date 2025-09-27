@@ -274,6 +274,45 @@
                         <input type="range" id="whiteboard-overlay-opacity" min="0" max="100" value="70">
                         <span id="whiteboard-opacity-value">70%</span>
                     </div>
+                    
+                    <div id="background-scaling-controls" class="background-scaling-controls" style="display: none;">
+                        <div class="scaling-controls">
+                            <h5>Background Scaling</h5>
+                            <div class="scaling-row">
+                                <div class="option-group">
+                                    <label for="background-width-scale">Width (%):</label>
+                                    <input type="range" id="background-width-scale" min="10" max="300" value="100">
+                                    <span id="background-width-scale-value">100%</span>
+                                </div>
+                                <div class="option-group">
+                                    <label for="background-height-scale">Height (%):</label>
+                                    <input type="range" id="background-height-scale" min="10" max="300" value="100">
+                                    <span id="background-height-scale-value">100%</span>
+                                </div>
+                            </div>
+                            <div class="option-group">
+                                <label>
+                                    <input type="checkbox" id="maintain-background-aspect-ratio" checked> Lock Aspect Ratio
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="position-controls">
+                            <h5>Background Position</h5>
+                            <div class="scaling-row">
+                                <div class="option-group">
+                                    <label for="background-x-position">X Position (%):</label>
+                                    <input type="range" id="background-x-position" min="-100" max="100" value="0">
+                                    <span id="background-x-position-value">0%</span>
+                                </div>
+                                <div class="option-group">
+                                    <label for="background-y-position">Y Position (%):</label>
+                                    <input type="range" id="background-y-position" min="-100" max="100" value="0">
+                                    <span id="background-y-position-value">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="custom-image-section">

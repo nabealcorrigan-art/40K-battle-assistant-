@@ -795,6 +795,11 @@ class StrategyWhiteboard {
         this.eraserSize = 15;
         this.overlayOpacity = 0.7;
         this.currentLayout = 'none';
+        this.backgroundImageScale = { width: 100, height: 100 };
+        this.backgroundImagePosition = { x: 0, y: 0 };
+        this.maintainBackgroundAspectRatio = true;
+        this.backgroundOriginalAspectRatio = 1;
+        this.backgroundImage = null;
         this.startPoint = null;
         this.previewCanvas = null;
         this.previewCtx = null;
@@ -883,6 +888,32 @@ class StrategyWhiteboard {
             this.overlayOpacity = parseInt(e.target.value) / 100;
             document.getElementById('whiteboard-opacity-value').textContent = `${e.target.value}%`;
             this.backgroundCanvas.style.opacity = this.overlayOpacity;
+        });
+
+        // Background image scaling controls
+        document.getElementById('background-width-scale').addEventListener('input', (e) => {
+            this.updateBackgroundImageScale('width', parseInt(e.target.value));
+        });
+
+        document.getElementById('background-height-scale').addEventListener('input', (e) => {
+            this.updateBackgroundImageScale('height', parseInt(e.target.value));
+        });
+
+        document.getElementById('maintain-background-aspect-ratio').addEventListener('change', (e) => {
+            this.maintainBackgroundAspectRatio = e.target.checked;
+        });
+
+        // Background image position controls
+        document.getElementById('background-x-position').addEventListener('input', (e) => {
+            this.backgroundImagePosition.x = parseInt(e.target.value);
+            document.getElementById('background-x-position-value').textContent = `${e.target.value}%`;
+            this.redrawBackgroundImage();
+        });
+
+        document.getElementById('background-y-position').addEventListener('input', (e) => {
+            this.backgroundImagePosition.y = parseInt(e.target.value);
+            document.getElementById('background-y-position-value').textContent = `${e.target.value}%`;
+            this.redrawBackgroundImage();
         });
 
         // Whiteboard actions
@@ -1009,8 +1040,23 @@ class StrategyWhiteboard {
     loadBackgroundLayout(imagePath) {
         const img = new Image();
         img.onload = () => {
-            this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
-            this.backgroundCtx.drawImage(img, 0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+            // Store the original aspect ratio
+            this.backgroundOriginalAspectRatio = img.width / img.height;
+            
+            // Reset scaling and position when loading new image
+            this.backgroundImageScale = { width: 100, height: 100 };
+            this.backgroundImagePosition = { x: 0, y: 0 };
+            this.updateBackgroundScaleInputs();
+            
+            // Store the image for redrawing
+            this.backgroundImage = img;
+            
+            // Draw the image with current scaling and positioning
+            this.redrawBackgroundImage();
+            
+            // Show scaling controls
+            this.showBackgroundControls();
+            
             this.updateCanvasState();
         };
         img.onerror = () => {
@@ -1022,6 +1068,69 @@ class StrategyWhiteboard {
 
     clearBackground() {
         this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+        this.backgroundImage = null;
+        this.hideBackgroundControls();
+    }
+
+    updateBackgroundImageScale(dimension, value) {
+        if (this.maintainBackgroundAspectRatio) {
+            if (dimension === 'width') {
+                this.backgroundImageScale.width = value;
+                this.backgroundImageScale.height = Math.round(value / this.backgroundOriginalAspectRatio);
+            } else {
+                this.backgroundImageScale.height = value;
+                this.backgroundImageScale.width = Math.round(value * this.backgroundOriginalAspectRatio);
+            }
+            this.updateBackgroundScaleInputs();
+        } else {
+            this.backgroundImageScale[dimension] = value;
+        }
+        
+        this.redrawBackgroundImage();
+        this.updateBackgroundScaleValues();
+    }
+
+    updateBackgroundScaleInputs() {
+        document.getElementById('background-width-scale').value = this.backgroundImageScale.width;
+        document.getElementById('background-height-scale').value = this.backgroundImageScale.height;
+        this.updateBackgroundScaleValues();
+    }
+
+    updateBackgroundScaleValues() {
+        document.getElementById('background-width-scale-value').textContent = `${this.backgroundImageScale.width}%`;
+        document.getElementById('background-height-scale-value').textContent = `${this.backgroundImageScale.height}%`;
+    }
+
+    redrawBackgroundImage() {
+        if (!this.backgroundImage) return;
+
+        this.backgroundCtx.clearRect(0, 0, this.backgroundCanvas.width, this.backgroundCanvas.height);
+        
+        // Calculate scaled dimensions
+        const baseWidth = this.backgroundCanvas.width;
+        const baseHeight = this.backgroundCanvas.height;
+        
+        const scaledWidth = (baseWidth * this.backgroundImageScale.width) / 100;
+        const scaledHeight = (baseHeight * this.backgroundImageScale.height) / 100;
+        
+        // Calculate position based on percentage offsets
+        const offsetX = (baseWidth * this.backgroundImagePosition.x) / 100;
+        const offsetY = (baseHeight * this.backgroundImagePosition.y) / 100;
+        
+        // Calculate centered position with offset
+        const x = (baseWidth - scaledWidth) / 2 + offsetX;
+        const y = (baseHeight - scaledHeight) / 2 + offsetY;
+        
+        // Draw the scaled and positioned image
+        this.backgroundCtx.drawImage(this.backgroundImage, x, y, scaledWidth, scaledHeight);
+    }
+
+    showBackgroundControls() {
+        document.getElementById('background-scaling-controls').style.display = 'block';
+    }
+
+    hideBackgroundControls() {
+        document.getElementById('background-scaling-controls').style.display = 'none';
     }
 
     updateCanvasSize() {
@@ -1058,8 +1167,8 @@ class StrategyWhiteboard {
         this.previewCanvas.height = canvasHeight;
         
         // Redraw background if exists
-        if (this.currentLayout !== 'none') {
-            this.loadBackgroundLayout(this.currentLayout);
+        if (this.currentLayout !== 'none' && this.backgroundImage) {
+            this.redrawBackgroundImage();
         }
         
         // Update custom image display if exists
