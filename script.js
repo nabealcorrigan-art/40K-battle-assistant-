@@ -114,6 +114,19 @@ class BattleAssistant {
     init() {
         this.bindEvents();
         this.loadSavedData();
+        this.initializeWhiteboardState();
+    }
+
+    initializeWhiteboardState() {
+        const whiteboardSection = document.getElementById('strategy-whiteboard');
+        const toggleButton = document.getElementById('toggle-whiteboard');
+        
+        // Set initial button state based on whiteboard visibility
+        if (whiteboardSection.classList.contains('hidden')) {
+            toggleButton.classList.remove('active');
+        } else {
+            toggleButton.classList.add('active');
+        }
     }
 
     bindEvents() {
@@ -146,6 +159,9 @@ class BattleAssistant {
         
         // Reference panel toggle
         document.getElementById('toggle-reference').addEventListener('click', () => this.toggleReferencePanel());
+        
+        // Whiteboard toggle
+        document.getElementById('toggle-whiteboard').addEventListener('click', () => this.toggleWhiteboardPanel());
         
         // Auto-save every 10 seconds
         setInterval(() => this.saveToLocalStorage(), 10000);
@@ -635,6 +651,22 @@ class BattleAssistant {
     toggleReferencePanel() {
         const panel = document.getElementById('reference-panel');
         panel.classList.toggle('open');
+    }
+
+    toggleWhiteboardPanel() {
+        const whiteboardSection = document.getElementById('strategy-whiteboard');
+        const toggleButton = document.getElementById('toggle-whiteboard');
+        
+        whiteboardSection.classList.toggle('hidden');
+        
+        // Update button active state based on whiteboard visibility
+        if (whiteboardSection.classList.contains('hidden')) {
+            toggleButton.classList.remove('active');
+        } else {
+            toggleButton.classList.add('active');
+            // Scroll to whiteboard when showing it
+            whiteboardSection.scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     // Utility functions
