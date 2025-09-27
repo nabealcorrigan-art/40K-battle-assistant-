@@ -599,6 +599,42 @@ main {
     padding-bottom: 0.5rem;
 }
 
+.tool-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.tool-button {
+    background: var(--surface-color);
+    color: var(--text-color);
+    border: 2px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px; /* Touch-friendly height */
+}
+
+.tool-button:hover {
+    background: var(--hover-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.tool-button.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+}
+
 .layout-thumbnails {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -893,7 +929,30 @@ main {
 /* Mobile responsiveness for strategy whiteboard */
 @media (max-width: 1024px) {
     .whiteboard-content {
-        grid-template-columns: 250px 1fr;
+        grid-template-columns: 280px 1fr; /* Slightly wider sidebar for better touch */
+    }
+    
+    .tool-button {
+        min-height: 40px; /* Better touch targets */
+    }
+}
+
+/* Tablet specific optimizations */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .whiteboard-sidebar {
+        max-height: 60vh; /* More space for controls on tablets */
+    }
+    
+    .whiteboard-canvas-container {
+        min-height: 50vh;
+    }
+    
+    .layout-thumbnails {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns for better tablet layout */
+    }
+    
+    .scaling-row {
+        grid-template-columns: 1fr 1fr; /* Keep side-by-side on tablets */
     }
 }
 
@@ -906,12 +965,14 @@ main {
     
     .whiteboard-sidebar {
         order: 2;
-        max-height: 300px;
+        max-height: 50vh; /* Increased from 300px for better content visibility */
+        min-height: 300px; /* Ensure minimum height for usability */
     }
     
     .whiteboard-canvas-container {
         order: 1;
-        min-height: 400px;
+        min-height: 40vh; /* Use viewport height for better mobile scaling */
+        max-height: 50vh; /* Prevent canvas from taking too much space */
     }
     
     .whiteboard-header {
@@ -922,10 +983,79 @@ main {
     
     .whiteboard-controls {
         justify-content: center;
+        flex-wrap: wrap; /* Allow buttons to wrap on small screens */
     }
     
     .layout-thumbnails {
         grid-template-columns: repeat(4, 1fr);
+        gap: 0.25rem; /* Reduce gap for mobile */
     }
+    
+    /* Better touch targets for mobile */
+    .tool-button {
+        min-height: 44px; /* iOS recommended touch target size */
+        font-size: 0.9rem;
+    }
+    
+    /* Improve scaling controls layout on mobile */
+    .scaling-row {
+        grid-template-columns: 1fr; /* Stack scaling controls vertically on mobile */
+        gap: 1rem;
+    }
+    
+    /* Better spacing for option groups on mobile */
+    .option-group {
+        margin-bottom: 1rem;
+    }
+    
+    .option-group input[type="range"] {
+        width: 100%;
+        min-height: 44px; /* Better touch target for sliders */
+    }
+}
+
+/* Touch-friendly improvements for all devices */
+.tool-button, .layout-thumbnail, button {
+    touch-action: manipulation; /* Prevent double-tap zoom on buttons */
+}
+
+/* Improve canvas touch interactions */
+.whiteboard-canvas-container canvas {
+    touch-action: none; /* Prevent scrolling when drawing */
+}
+
+/* Better visibility for custom image controls */
+.custom-image-controls {
+    background: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    margin-top: 0.5rem;
+}
+
+/* Improve checkbox and label spacing for touch */
+.option-group label {
+    min-height: 44px; /* Better touch target */
+    padding: 0.5rem 0;
+}
+
+/* Better button sizing for all screen sizes */
+.primary-button, .secondary-button, .warning-button {
+    min-height: 44px;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.warning-button {
+    background: var(--warning-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.warning-button:hover {
+    background: #e68900;
 }
 }
