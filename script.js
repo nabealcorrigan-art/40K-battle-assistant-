@@ -22,6 +22,11 @@ class Shape {
                 return this.isPointNearRectangle(point, tolerance);
             case 'circle':
                 return this.isPointNearCircle(point, tolerance);
+            case 'triangle':
+            case 'diamond':
+            case 'hexagon':
+            case 'star':
+                return this.isPointNearPolygon(point, tolerance);
             default:
                 return false;
         }
@@ -83,6 +88,17 @@ class Shape {
         return Math.abs(distance - radius) <= tolerance;
     }
     
+    isPointNearPolygon(point, tolerance) {
+        // For polygon shapes, check if point is within the bounding area with tolerance
+        const { startPoint, endPoint } = this;
+        const left = Math.min(startPoint.x, endPoint.x) - tolerance;
+        const right = Math.max(startPoint.x, endPoint.x) + tolerance;
+        const top = Math.min(startPoint.y, endPoint.y) - tolerance;
+        const bottom = Math.max(startPoint.y, endPoint.y) + tolerance;
+        
+        return point.x >= left && point.x <= right && point.y >= top && point.y <= bottom;
+    }
+    
     // Move the shape by a delta
     move(deltaX, deltaY) {
         this.startPoint.x += deltaX;
@@ -118,13 +134,13 @@ class BattleAssistant {
     }
 
     initializeWhiteboardState() {
-        const whiteboardSection = document.getElementById('strategy-whiteboard');
+        const whiteboardSection = document.getElementById('strategy-whiteboard-modal');
         const toggleButton = document.getElementById('toggle-whiteboard');
         
         // Set initial button state based on whiteboard visibility
-        if (whiteboardSection.classList.contains('hidden')) {
+        if (whiteboardSection && whiteboardSection.classList.contains('hidden')) {
             toggleButton.classList.remove('active');
-        } else {
+        } else if (toggleButton) {
             toggleButton.classList.add('active');
         }
     }
@@ -833,6 +849,11 @@ class StrategyWhiteboard {
         this.dragOffset = { x: 0, y: 0 };
         this.shapeIdCounter = 0;
         
+        // Shape placement system
+        this.placementMode = false;
+        this.selectedShapeType = null;
+        this.defaultShapeSize = 50; // Default size for placed shapes
+        
         // Custom image overlay properties
         this.customImage = null;
         this.customImageElement = null;
@@ -877,6 +898,11 @@ class StrategyWhiteboard {
         // Tool selection
         document.querySelectorAll('#strategy-whiteboard .tool-button').forEach(button => {
             button.addEventListener('click', (e) => this.selectTool(e.target.dataset.tool));
+        });
+
+        // Shape placement buttons
+        document.querySelectorAll('.shape-place-button').forEach(button => {
+            button.addEventListener('click', (e) => this.selectShapeForPlacement(e.target.dataset.shape));
         });
 
         // Drawing options
@@ -1039,6 +1065,11 @@ class StrategyWhiteboard {
 
     selectTool(tool) {
         this.currentTool = tool;
+        
+        // Exit placement mode when selecting a drawing tool
+        if (this.placementMode) {
+            this.exitPlacementMode();
+        }
         
         // Update UI
         document.querySelectorAll('#strategy-whiteboard .tool-button').forEach(btn => btn.classList.remove('active'));
@@ -1277,6 +1308,12 @@ class StrategyWhiteboard {
     startDrawing(e) {
         const pos = this.getMousePos(e);
         
+        // Handle shape placement mode
+        if (this.placementMode && this.selectedShapeType) {
+            this.placeShape(this.selectedShapeType, pos);
+            return;
+        }
+        
         // Check if we're clicking on an existing shape for selection/dragging
         if (this.currentTool !== 'pen' && this.currentTool !== 'eraser') {
             const clickedShape = this.getShapeAtPoint(pos);
@@ -1513,6 +1550,33 @@ class StrategyWhiteboard {
         }
     }
 
+    updateSelectedShapeSize(sizePercent) {
+        if (this.selectedShape) {
+            const shape = this.selectedShape;
+            const centerX = (shape.startPoint.x + shape.endPoint.x) / 2;
+            const centerY = (shape.startPoint.y + shape.endPoint.y) / 2;
+            
+            // Calculate original size
+            const originalWidth = Math.abs(shape.endPoint.x - shape.startPoint.x);
+            const originalHeight = Math.abs(shape.endPoint.y - shape.startPoint.y);
+            
+            // Calculate new size
+            const newWidth = (originalWidth * sizePercent) / 100;
+            const newHeight = (originalHeight * sizePercent) / 100;
+            
+            // Update shape bounds
+            shape.startPoint.x = centerX - newWidth / 2;
+            shape.startPoint.y = centerY - newHeight / 2;
+            shape.endPoint.x = centerX + newWidth / 2;
+            shape.endPoint.y = centerY + newHeight / 2;
+            
+            // Update UI
+            document.getElementById('shape-size-value').textContent = `${sizePercent}%`;
+            
+            this.redrawCanvas();
+        }
+    }
+
     redrawCanvas() {
         // Clear the main canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1559,6 +1623,18 @@ class StrategyWhiteboard {
                 this.ctx.arc(shape.startPoint.x, shape.startPoint.y, radius, 0, 2 * Math.PI);
                 this.ctx.stroke();
                 break;
+            case 'triangle':
+                this.drawTriangle(this.ctx, shape);
+                break;
+            case 'diamond':
+                this.drawDiamond(this.ctx, shape);
+                break;
+            case 'hexagon':
+                this.drawHexagon(this.ctx, shape);
+                break;
+            case 'star':
+                this.drawStar(this.ctx, shape);
+                break;
         }
         
         this.ctx.restore();
@@ -1580,6 +1656,14 @@ class StrategyWhiteboard {
         
         // Show shape controls if they don't exist
         this.createShapeControlsUI();
+        
+        // Update size slider to current shape size (assume 100% as baseline)
+        const sizeSlider = document.getElementById('shape-size-slider');
+        const sizeValue = document.getElementById('shape-size-value');
+        if (sizeSlider && sizeValue) {
+            sizeSlider.value = 100;
+            sizeValue.textContent = '100%';
+        }
     }
 
     hideShapeControls() {
@@ -1603,6 +1687,11 @@ class StrategyWhiteboard {
                 <div class="option-group">
                     <label>Shape color and thickness can be changed using the Drawing Options above</label>
                 </div>
+                <div class="option-group">
+                    <label for="shape-size-slider">Size:</label>
+                    <input type="range" id="shape-size-slider" min="20" max="200" value="100">
+                    <span id="shape-size-value">100%</span>
+                </div>
             `;
             
             // Insert after drawing options
@@ -1612,6 +1701,11 @@ class StrategyWhiteboard {
             // Bind delete button
             document.getElementById('delete-shape').addEventListener('click', () => {
                 this.deleteSelectedShape();
+            });
+            
+            // Bind size slider
+            document.getElementById('shape-size-slider').addEventListener('input', (e) => {
+                this.updateSelectedShapeSize(parseInt(e.target.value));
             });
         }
         shapeControls.style.display = 'block';
@@ -1857,5 +1951,116 @@ class StrategyWhiteboard {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
         });
+    }
+
+    // Shape placement methods
+    selectShapeForPlacement(shapeType) {
+        this.placementMode = true;
+        this.selectedShapeType = shapeType;
+        
+        // Deselect all drawing tools
+        document.querySelectorAll('.tool-button').forEach(btn => btn.classList.remove('active'));
+        
+        // Update shape placement UI
+        document.querySelectorAll('.shape-place-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-shape="${shapeType}"]`).classList.add('active');
+        
+        // Update cursor
+        this.canvas.className = 'placement-mode';
+    }
+
+    placeShape(shapeType, position) {
+        const size = this.defaultShapeSize;
+        const startPoint = { x: position.x - size/2, y: position.y - size/2 };
+        const endPoint = { x: position.x + size/2, y: position.y + size/2 };
+        
+        this.createShape(shapeType, startPoint, endPoint);
+        
+        // Exit placement mode after placing
+        this.exitPlacementMode();
+    }
+
+    exitPlacementMode() {
+        this.placementMode = false;
+        this.selectedShapeType = null;
+        
+        // Remove active state from shape buttons
+        document.querySelectorAll('.shape-place-button').forEach(btn => btn.classList.remove('active'));
+        
+        // Reset cursor
+        this.canvas.className = '';
+    }
+
+    // Drawing methods for new shapes
+    drawTriangle(ctx, shape) {
+        const { startPoint, endPoint } = shape;
+        const centerX = (startPoint.x + endPoint.x) / 2;
+        const width = Math.abs(endPoint.x - startPoint.x);
+        const height = Math.abs(endPoint.y - startPoint.y);
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, startPoint.y);
+        ctx.lineTo(startPoint.x, endPoint.y);
+        ctx.lineTo(endPoint.x, endPoint.y);
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    drawDiamond(ctx, shape) {
+        const { startPoint, endPoint } = shape;
+        const centerX = (startPoint.x + endPoint.x) / 2;
+        const centerY = (startPoint.y + endPoint.y) / 2;
+        
+        ctx.beginPath();
+        ctx.moveTo(centerX, startPoint.y);
+        ctx.lineTo(endPoint.x, centerY);
+        ctx.lineTo(centerX, endPoint.y);
+        ctx.lineTo(startPoint.x, centerY);
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    drawHexagon(ctx, shape) {
+        const { startPoint, endPoint } = shape;
+        const centerX = (startPoint.x + endPoint.x) / 2;
+        const centerY = (startPoint.y + endPoint.y) / 2;
+        const radius = Math.min(Math.abs(endPoint.x - startPoint.x), Math.abs(endPoint.y - startPoint.y)) / 2;
+        
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * 60) * Math.PI / 180;
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    drawStar(ctx, shape) {
+        const { startPoint, endPoint } = shape;
+        const centerX = (startPoint.x + endPoint.x) / 2;
+        const centerY = (startPoint.y + endPoint.y) / 2;
+        const outerRadius = Math.min(Math.abs(endPoint.x - startPoint.x), Math.abs(endPoint.y - startPoint.y)) / 2;
+        const innerRadius = outerRadius * 0.4;
+        
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+            const angle = (i * 36) * Math.PI / 180;
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const x = centerX + radius * Math.cos(angle - Math.PI / 2);
+            const y = centerY + radius * Math.sin(angle - Math.PI / 2);
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        ctx.closePath();
+        ctx.stroke();
     }
 }
