@@ -163,6 +163,16 @@ class BattleAssistant {
         // Whiteboard toggle
         document.getElementById('toggle-whiteboard').addEventListener('click', () => this.toggleWhiteboardPanel());
         
+        // Whiteboard modal close button
+        document.getElementById('close-whiteboard-modal').addEventListener('click', () => this.toggleWhiteboardPanel());
+        
+        // Close modal when clicking outside
+        document.getElementById('strategy-whiteboard-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'strategy-whiteboard-modal') {
+                this.toggleWhiteboardPanel();
+            }
+        });
+        
         // Auto-save every 10 seconds
         setInterval(() => this.saveToLocalStorage(), 10000);
     }
@@ -654,18 +664,20 @@ class BattleAssistant {
     }
 
     toggleWhiteboardPanel() {
-        const whiteboardSection = document.getElementById('strategy-whiteboard');
+        const whiteboardModal = document.getElementById('strategy-whiteboard-modal');
         const toggleButton = document.getElementById('toggle-whiteboard');
         
-        whiteboardSection.classList.toggle('hidden');
+        whiteboardModal.classList.toggle('hidden');
         
         // Update button active state based on whiteboard visibility
-        if (whiteboardSection.classList.contains('hidden')) {
+        if (whiteboardModal.classList.contains('hidden')) {
             toggleButton.classList.remove('active');
         } else {
             toggleButton.classList.add('active');
-            // Scroll to whiteboard when showing it
-            whiteboardSection.scrollIntoView({ behavior: 'smooth' });
+            // Initialize canvas sizing when modal opens
+            if (window.strategyWhiteboard) {
+                window.strategyWhiteboard.updateCanvasSize();
+            }
         }
     }
 
@@ -804,6 +816,16 @@ class StrategyWhiteboard {
         this.previewCanvas = null;
         this.previewCtx = null;
         
+        // Canvas size management
+        this.gameSizes = {
+            'killteam': { width: 600, height: 440, name: 'Kill Team (22" x 16")' },
+            'incursion': { width: 800, height: 600, name: 'Incursion (44" x 30")' },
+            'strikeforce': { width: 960, height: 720, name: 'Strike Force (44" x 36")' },
+            'onslaught': { width: 1200, height: 900, name: 'Onslaught (44" x 45")' },
+            'custom': { width: 800, height: 600, name: 'Custom Size' }
+        };
+        this.currentGameSize = 'incursion';
+        
         // Shape management system
         this.shapes = [];
         this.selectedShape = null;
@@ -880,6 +902,14 @@ class StrategyWhiteboard {
             thumbnail.addEventListener('click', (e) => {
                 const layout = e.currentTarget.dataset.layout;
                 this.selectLayout(layout);
+            });
+        });
+
+        // Game size selection
+        document.querySelectorAll('.game-size-option').forEach(option => {
+            option.addEventListener('click', (e) => {
+                const gameSize = e.currentTarget.dataset.gameSize;
+                this.selectGameSize(gameSize);
             });
         });
 
@@ -1019,6 +1049,30 @@ class StrategyWhiteboard {
         this.canvas.classList.add(`${tool}-mode`);
     }
 
+    selectGameSize(gameSize) {
+        this.currentGameSize = gameSize;
+        
+        // Update UI
+        document.querySelectorAll('.game-size-option').forEach(option => option.classList.remove('selected'));
+        document.querySelector(`[data-game-size="${gameSize}"]`).classList.add('selected');
+        
+        // Update canvas size
+        this.updateCanvasSize();
+        
+        // Redraw content
+        if (this.currentLayout !== 'none' && this.backgroundImage) {
+            this.redrawBackgroundImage();
+        }
+        
+        // Update custom image display if exists
+        if (this.customImageElement) {
+            this.updateCustomImageDisplay();
+        }
+        
+        // Update canvas state to show/hide placeholder
+        this.updateCanvasState();
+    }
+
     selectLayout(layout) {
         this.currentLayout = layout;
         
@@ -1137,9 +1191,10 @@ class StrategyWhiteboard {
         const container = document.querySelector('.whiteboard-canvas-container');
         const containerRect = container.getBoundingClientRect();
         
-        // Set standard canvas size (can be made configurable later)
-        const canvasWidth = 800;
-        const canvasHeight = 600;
+        // Get canvas size based on selected game size
+        const gameSize = this.gameSizes[this.currentGameSize];
+        const canvasWidth = gameSize.width;
+        const canvasHeight = gameSize.height;
         
         // Scale canvas to fit container while maintaining aspect ratio
         const scaleX = (containerRect.width - 40) / canvasWidth;

@@ -188,42 +188,66 @@
         </aside>
     </main>
 
-    <!-- Strategy Whiteboard Section -->
-    <section id="strategy-whiteboard" class="strategy-whiteboard hidden">
-        <div class="whiteboard-header">
-            <h2>Strategy Whiteboard</h2>
-            <div class="whiteboard-controls">
-                <button id="clear-whiteboard" class="warning-button">Clear Board</button>
-                <button id="export-whiteboard" class="primary-button">Export Strategy</button>
-            </div>
-        </div>
-
-        <div class="whiteboard-content">
-            <!-- Sidebar with tools -->
-            <div class="whiteboard-sidebar">
-                <div class="tool-section">
-                    <h4>Drawing Tools</h4>
-                    <div class="tool-buttons">
-                        <button class="tool-button active" data-tool="pen" title="Drawing Pen">
-                            ✏️ Pen
-                        </button>
-                        <button class="tool-button" data-tool="line" title="Straight Line">
-                            📏 Line
-                        </button>
-                        <button class="tool-button" data-tool="arrow" title="Arrow">
-                            ➡️ Arrow
-                        </button>
-                        <button class="tool-button" data-tool="rectangle" title="Rectangle">
-                            ⬛ Rectangle
-                        </button>
-                        <button class="tool-button" data-tool="circle" title="Circle">
-                            ⭕ Circle
-                        </button>
-                        <button class="tool-button" data-tool="eraser" title="Eraser">
-                            🧽 Eraser
-                        </button>
-                    </div>
+    <!-- Strategy Whiteboard Section as Modal -->
+    <div id="strategy-whiteboard-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Strategy Whiteboard</h2>
+                <div class="modal-controls">
+                    <button id="clear-whiteboard" class="warning-button">Clear Board</button>
+                    <button id="export-whiteboard" class="primary-button">Export Strategy</button>
+                    <button id="close-whiteboard-modal" class="close-button">×</button>
                 </div>
+            </div>
+            
+            <div class="whiteboard-content">
+                <!-- Sidebar with tools -->
+                <div class="whiteboard-sidebar">
+                    <div class="tool-section">
+                        <h4>Drawing Tools</h4>
+                        <div class="tool-buttons">
+                            <button class="tool-button active" data-tool="pen" title="Drawing Pen">
+                                ✏️ Pen
+                            </button>
+                            <button class="tool-button" data-tool="line" title="Straight Line">
+                                📏 Line
+                            </button>
+                            <button class="tool-button" data-tool="arrow" title="Arrow">
+                                ➡️ Arrow
+                            </button>
+                            <button class="tool-button" data-tool="rectangle" title="Rectangle">
+                                ⬛ Rectangle
+                            </button>
+                            <button class="tool-button" data-tool="circle" title="Circle">
+                                ⭕ Circle
+                            </button>
+                            <button class="tool-button" data-tool="eraser" title="Eraser">
+                                🧽 Eraser
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="game-size-selection">
+                        <h4>Canvas Size (Game Type)</h4>
+                        <div class="game-size-options">
+                            <div class="game-size-option" data-game-size="killteam" title="Kill Team - 22&quot; x 16&quot;">
+                                <div class="size-label">Kill Team</div>
+                                <div class="size-dimensions">22" × 16"</div>
+                            </div>
+                            <div class="game-size-option selected" data-game-size="incursion" title="Incursion - 44&quot; x 30&quot;">
+                                <div class="size-label">Incursion</div>
+                                <div class="size-dimensions">44" × 30"</div>
+                            </div>
+                            <div class="game-size-option" data-game-size="strikeforce" title="Strike Force - 44&quot; x 36&quot;">
+                                <div class="size-label">Strike Force</div>
+                                <div class="size-dimensions">44" × 36"</div>
+                            </div>
+                            <div class="game-size-option" data-game-size="onslaught" title="Onslaught - 44&quot; x 45&quot;">
+                                <div class="size-label">Onslaught</div>
+                                <div class="size-dimensions">44" × 45"</div>
+                            </div>
+                        </div>
+                    </div>
 
                 <div class="drawing-options" id="whiteboard-drawing-options">
                     <h4>Drawing Options</h4>
@@ -361,15 +385,16 @@
                 </div>
             </div>
 
-            <!-- Canvas container -->
-            <div class="whiteboard-canvas-container">
-                <canvas id="strategy-canvas" width="800" height="600"></canvas>
-                <canvas id="strategy-background-canvas" width="800" height="600"></canvas>
-                <div id="custom-image-overlay" class="custom-image-overlay"></div>
-                <div class="canvas-overlay" id="strategy-canvas-overlay"></div>
+                <!-- Canvas container -->
+                <div class="whiteboard-canvas-container">
+                    <canvas id="strategy-canvas" width="800" height="600"></canvas>
+                    <canvas id="strategy-background-canvas" width="800" height="600"></canvas>
+                    <div id="custom-image-overlay" class="custom-image-overlay"></div>
+                    <div class="canvas-overlay" id="strategy-canvas-overlay"></div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <script src="script.js"></script>
 </body>
