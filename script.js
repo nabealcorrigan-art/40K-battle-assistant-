@@ -2,7 +2,7 @@
 
 // Shape class to represent drawable shapes
 class Shape {
-    constructor(id, type, startPoint, endPoint, color, thickness) {
+    constructor(id, type, startPoint, endPoint, color, thickness, name = null) {
         this.id = id;
         this.type = type;
         this.startPoint = startPoint;
@@ -10,6 +10,7 @@ class Shape {
         this.color = color;
         this.thickness = thickness;
         this.selected = false;
+        this.name = name || `${type.charAt(0).toUpperCase() + type.slice(1)} ${id}`;
     }
     
     // Check if a point is near this shape (for selection)
@@ -1577,6 +1578,13 @@ class StrategyWhiteboard {
         }
     }
 
+    updateSelectedShapeName(name) {
+        if (this.selectedShape) {
+            this.selectedShape.name = name;
+            this.redrawCanvas();
+        }
+    }
+
     redrawCanvas() {
         // Clear the main canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1637,6 +1645,30 @@ class StrategyWhiteboard {
                 break;
         }
         
+        // Draw shape name if it exists
+        if (shape.name) {
+            this.ctx.shadowColor = 'transparent';
+            this.ctx.shadowBlur = 0;
+            
+            // Calculate label position (center of shape)
+            const centerX = (shape.startPoint.x + shape.endPoint.x) / 2;
+            const centerY = (shape.startPoint.y + shape.endPoint.y) / 2;
+            
+            // Set text styling
+            this.ctx.fillStyle = shape.color;
+            this.ctx.font = '12px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            
+            // Add white background for better readability
+            this.ctx.strokeStyle = 'white';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeText(shape.name, centerX, centerY + 20);
+            
+            // Draw the text
+            this.ctx.fillText(shape.name, centerX, centerY + 20);
+        }
+        
         this.ctx.restore();
     }
 
@@ -1656,6 +1688,12 @@ class StrategyWhiteboard {
         
         // Show shape controls if they don't exist
         this.createShapeControlsUI();
+        
+        // Update name input with current shape name
+        const nameInput = document.getElementById('shape-name-input');
+        if (nameInput) {
+            nameInput.value = shape.name;
+        }
         
         // Update size slider to current shape size (assume 100% as baseline)
         const sizeSlider = document.getElementById('shape-size-slider');
@@ -1681,6 +1719,10 @@ class StrategyWhiteboard {
             shapeControls.className = 'shape-controls';
             shapeControls.innerHTML = `
                 <h4>Selected Shape</h4>
+                <div class="option-group">
+                    <label for="shape-name-input">Name:</label>
+                    <input type="text" id="shape-name-input" placeholder="Enter shape name">
+                </div>
                 <div class="shape-control-buttons">
                     <button id="delete-shape" class="warning-button">Delete Shape</button>
                 </div>
@@ -1701,6 +1743,11 @@ class StrategyWhiteboard {
             // Bind delete button
             document.getElementById('delete-shape').addEventListener('click', () => {
                 this.deleteSelectedShape();
+            });
+            
+            // Bind name input
+            document.getElementById('shape-name-input').addEventListener('input', (e) => {
+                this.updateSelectedShapeName(e.target.value);
             });
             
             // Bind size slider
